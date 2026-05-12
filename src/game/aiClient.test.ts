@@ -65,10 +65,42 @@ describe('aiClient', () => {
 
     const result = await callAiModel(config, [{ role: 'user', content: 'hello' }], fetchMock);
 
-    expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/v1/chat/completions', expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
       method: 'POST',
-      headers: expect.objectContaining({ Authorization: 'Bearer sk-test' })
+      headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+      body: expect.stringContaining('https://api.example.com/v1')
     }));
     expect(result.story_text).toBe('正文');
+  });
+
+  it('adds /v1 to provider hosts that omit it', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                verdict: 'allowed',
+                verdict_reason: '符合设定',
+                story_text: '正文',
+                choice_point: '抉择',
+                state_patch: {}
+              })
+            }
+          }
+        ]
+      })
+    });
+
+    await callAiModel(
+      { baseUrl: 'https://aihubmix.com', apiKey: 'sk-test', model: 'deepseek-v4-flash' },
+      [{ role: 'user', content: 'hello' }],
+      fetchMock
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+      body: expect.stringContaining('https://aihubmix.com/v1')
+    }));
   });
 });
