@@ -105,3 +105,137 @@ button:disabled {
   color: #b42318;
   margin: 0;
 }
+
+.reader-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid #deded8;
+  background: rgba(247, 247, 245, 0.94);
+}
+
+.topbar-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.topbar span {
+  color: #73736d;
+  font-size: 14px;
+}
+
+.reader-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  min-height: calc(100vh - 56px);
+}
+
+.reader-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.novel {
+  flex: 1;
+  overflow: auto;
+  padding: 46px min(9vw, 120px) 36px;
+}
+
+.novel h1 {
+  margin: 0 0 28px;
+  text-align: center;
+  font: 600 26px Georgia, "Times New Roman", "SimSun", serif;
+}
+
+.turn-section p {
+  max-width: 760px;
+  margin: 0 auto 17px;
+  text-indent: 2em;
+  font: 18px/2 Georgia, "Times New Roman", "SimSun", serif;
+}
+
+.choice-point {
+  max-width: 760px;
+  margin: 30px auto;
+  padding: 15px 17px;
+  border: 1px solid #deded8;
+  border-radius: 6px;
+  background: #efefeb;
+  color: #73736d;
+  line-height: 1.75;
+}
+
+.action-input {
+  border-top: 1px solid #deded8;
+  padding: 14px 18px;
+  display: flex;
+  gap: 10px;
+  background: #fbfbfa;
+}
+
+.action-input input {
+  height: 44px;
+}
+
+.sidebar {
+  border-left: 1px solid #deded8;
+  background: #fbfbfa;
+  padding: 20px 18px;
+  overflow: auto;
+}
+
+.sidebar section {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #deded8;
+}
+
+.sidebar section:last-child {
+  border-bottom: 0;
+}
+
+.sidebar h2 {
+  margin: 0 0 9px;
+  font-size: 14px;
+  color: #73736d;
+}
+
+.sidebar p {
+  margin: 0 0 6px;
+  line-height: 1.65;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+@media (max-width: 860px) {
+  .reader-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-left: 0;
+    border-top: 1px solid #deded8;
+  }
+
+  .novel {
+    padding: 32px 22px;
+  }
+}
