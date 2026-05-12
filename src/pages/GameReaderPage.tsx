@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import ActionInput from '../components/ActionInput';
 import ErrorNotice from '../components/ErrorNotice';
+import ExportStoryButton from '../components/ExportStoryButton';
 import NovelView from '../components/NovelView';
 import SidebarStatePanel from '../components/SidebarStatePanel';
 import { useGameStore } from '../store/useGameStore';
@@ -26,7 +27,10 @@ export default function GameReaderPage({ storyId }: GameReaderPageProps) {
     <div className="reader-page">
       <header className="topbar">
         <div className="topbar-title">{currentStory.config.title}</div>
-        <span>第 {currentStory.state.turn} / {currentStory.state.maxTurns} 回合</span>
+        <div className="topbar-actions">
+          <span>第 {currentStory.state.turn} / {currentStory.state.maxTurns} 回合</span>
+          <ExportStoryButton story={currentStory} />
+        </div>
       </header>
       <div className="reader-layout">
         <main className="reader-main">

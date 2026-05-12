@@ -133,6 +133,18 @@ button:disabled {
   font-size: 14px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.secondary-button {
+  background: transparent;
+  color: #20201d;
+  border: 1px solid #deded8;
+}
+
 .reader-layout {
   flex: 1;
   display: grid;
