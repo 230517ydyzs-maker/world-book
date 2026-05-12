@@ -34,3 +34,74 @@ textarea {
   color: #73736d;
   font-size: 14px;
 }
+
+.lede {
+  color: #73736d;
+  line-height: 1.7;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #deded8;
+  border-radius: 8px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+}
+
+.form-section {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #deded8;
+  padding-top: 18px;
+}
+
+.form-section h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: #73736d;
+  font-size: 14px;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #deded8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #20201d;
+  padding: 12px 13px;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  background: #1d1d1b;
+  color: #ffffff;
+  min-height: 42px;
+  padding: 0 18px;
+  justify-self: start;
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  color: #b42318;
+  margin: 0;
+}
