@@ -1,10 +1,20 @@
+import CreateStoryPage from './pages/CreateStoryPage';
+import GameReaderPage from './pages/GameReaderPage';
+
+function getRoute() {
+  const path = window.location.pathname;
+  if (path.startsWith('/play/')) {
+    return { name: 'play' as const, storyId: decodeURIComponent(path.replace('/play/', '')) };
+  }
+  return { name: 'create' as const };
+}
+
 export default function App() {
-  return (
-    <main className="page page-narrow">
-      <p className="eyebrow">故事生成器</p>
-      <h1>创建一本新的小说</h1>
-      <label htmlFor="title">故事标题</label>
-      <input id="title" name="title" />
-    </main>
-  );
+  const route = getRoute();
+
+  if (route.name === 'play') {
+    return <GameReaderPage storyId={route.storyId} />;
+  }
+
+  return <CreateStoryPage />;
 }
