@@ -81,7 +81,10 @@ export async function callAiModel(
   messages: ChatMessage[],
   fetcher: typeof fetch = fetch
 ): Promise<AiTurnResponse> {
-  const response = await fetcher('http://localhost:8787/api/ai-proxy', {
+  const proxyUrl = import.meta.env.DEV
+    ? 'http://localhost:8787/api/ai-proxy'
+    : '/api/ai-proxy';
+  const response = await fetcher(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
