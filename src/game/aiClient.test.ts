@@ -38,6 +38,23 @@ describe('aiClient', () => {
     }))).toThrow('Invalid AI verdict');
   });
 
+  it('normalizes array and object text fields from flexible model output', () => {
+    const parsed = parseAiTurnResponse(JSON.stringify({
+      verdict: 'allowed',
+      verdict_reason: ['符合角色能力', '风险较低'],
+      story_text: { paragraph1: '你走向钟楼。', paragraph2: '雨声更密了。' },
+      choice_point: [
+        { A: '继续前进' },
+        { B: '回到档案室' }
+      ],
+      state_patch: {}
+    }));
+
+    expect(parsed.verdict_reason).toContain('符合角色能力');
+    expect(parsed.story_text).toContain('你走向钟楼。');
+    expect(parsed.choice_point).toContain('继续前进');
+  });
+
   it('calls OpenAI-compatible chat completions endpoint', async () => {
     const config: ModelConfig = {
       baseUrl: 'https://api.example.com/v1',

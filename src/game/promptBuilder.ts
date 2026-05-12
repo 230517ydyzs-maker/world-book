@@ -5,7 +5,7 @@ export interface ChatMessage {
   content: string;
 }
 
-const jsonContract = `只输出 JSON，不要输出 Markdown。JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。verdict 只能是 allowed, allowed_with_cost, failed_forward, rejected。`;
+const jsonContract = `只输出 JSON，不要输出 Markdown。JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。verdict 只能是 allowed, allowed_with_cost, failed_forward, rejected。verdict_reason、story_text、choice_point 必须是字符串；choice_point 可以在同一个字符串里写 1-3 个建议方向，但玩家仍可自由输入行动。`;
 
 function storyBrief(story: StoryConfig): string {
   return [

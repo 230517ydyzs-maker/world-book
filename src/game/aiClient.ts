@@ -19,21 +19,39 @@ function extractJson(content: string): string {
   return trimmed;
 }
 
+function normalizeTextField(value: unknown, fieldName: string): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeTextField(item, fieldName)).join('\n');
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value)
+      .map((item) => normalizeTextField(item, fieldName))
+      .join('\n');
+  }
+
+  throw new Error(`Invalid AI ${fieldName}`);
+}
+
 export function parseAiTurnResponse(content: string): AiTurnResponse {
   const parsed = JSON.parse(extractJson(content)) as Partial<AiTurnResponse>;
 
   if (!parsed.verdict || !verdicts.includes(parsed.verdict)) {
     throw new Error('Invalid AI verdict');
   }
-  if (typeof parsed.verdict_reason !== 'string') throw new Error('Invalid AI verdict_reason');
-  if (typeof parsed.story_text !== 'string') throw new Error('Invalid AI story_text');
-  if (typeof parsed.choice_point !== 'string') throw new Error('Invalid AI choice_point');
+  const verdictReason = normalizeTextField(parsed.verdict_reason, 'verdict_reason');
+  const storyText = normalizeTextField(parsed.story_text, 'story_text');
+  const choicePoint = normalizeTextField(parsed.choice_point, 'choice_point');
 
   return {
     verdict: parsed.verdict,
-    verdict_reason: parsed.verdict_reason,
-    story_text: parsed.story_text,
-    choice_point: parsed.choice_point,
+    verdict_reason: verdictReason,
+    story_text: storyText,
+    choice_point: choicePoint,
     state_patch: parsed.state_patch ?? {}
   };
 }
