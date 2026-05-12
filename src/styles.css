@@ -1,0 +1,36 @@
+:root {
+  color: #20201d;
+  background: #f7f7f5;
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f7f7f5;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.page {
+  width: min(1180px, calc(100vw - 48px));
+  margin: 42px auto;
+}
+
+.page-narrow {
+  width: min(760px, calc(100vw - 48px));
+}
+
+.eyebrow {
+  color: #73736d;
+  font-size: 14px;
+}
