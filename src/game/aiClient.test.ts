@@ -73,6 +73,24 @@ describe('aiClient', () => {
     expect(result.story_text).toBe('正文');
   });
 
+  it('surfaces upstream error response bodies', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: async () => JSON.stringify({
+        error: {
+          message: 'model not found'
+        }
+      })
+    });
+
+    await expect(callAiModel(
+      { baseUrl: 'https://aihubmix.com/v1', apiKey: 'sk-test', model: 'deepseek-v4-flash' },
+      [{ role: 'user', content: 'hello' }],
+      fetchMock
+    )).rejects.toThrow('AI 请求失败，状态码 404：model not found');
+  });
+
   it('adds /v1 to provider hosts that omit it', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

@@ -38,6 +38,26 @@ export function parseAiTurnResponse(content: string): AiTurnResponse {
   };
 }
 
+async function responseErrorMessage(response: Response): Promise<string> {
+  const text = await response.text();
+
+  if (!text) {
+    return `AI 请求失败，状态码 ${response.status}`;
+  }
+
+  try {
+    const payload = JSON.parse(text);
+    const message = payload?.error?.message ?? payload?.message ?? payload?.error;
+    if (typeof message === 'string') {
+      return `AI 请求失败，状态码 ${response.status}：${message}`;
+    }
+  } catch {
+    return `AI 请求失败，状态码 ${response.status}：${text.slice(0, 240)}`;
+  }
+
+  return `AI 请求失败，状态码 ${response.status}：${text.slice(0, 240)}`;
+}
+
 export async function callAiModel(
   config: ModelConfig,
   messages: ChatMessage[],
@@ -60,7 +80,7 @@ export async function callAiModel(
   });
 
   if (!response.ok) {
-    throw new Error(`AI 请求失败，状态码 ${response.status}`);
+    throw new Error(await responseErrorMessage(response));
   }
 
   const payload = await response.json();
