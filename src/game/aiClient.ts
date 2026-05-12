@@ -63,7 +63,7 @@ export async function callAiModel(
   messages: ChatMessage[],
   fetcher: typeof fetch = fetch
 ): Promise<AiTurnResponse> {
-  const response = await fetcher('/api/ai-proxy', {
+  const response = await fetcher('http://localhost:8787/api/ai-proxy', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -76,7 +76,7 @@ export async function callAiModel(
       messages
     })
   }).catch((error) => {
-    throw new Error(error instanceof TypeError ? '本地 AI 代理不可用，请确认开发服务器已重启' : 'AI 请求失败');
+    throw new Error(error instanceof TypeError ? '本地 AI 代理不可用，请确认代理服务已启动' : 'AI 请求失败');
   });
 
   if (!response.ok) {

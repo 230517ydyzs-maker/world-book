@@ -65,7 +65,7 @@ describe('aiClient', () => {
 
     const result = await callAiModel(config, [{ role: 'user', content: 'hello' }], fetchMock);
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8787/api/ai-proxy', expect.objectContaining({
       method: 'POST',
       headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
       body: expect.stringContaining('https://api.example.com/v1')
@@ -117,7 +117,7 @@ describe('aiClient', () => {
       fetchMock
     );
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/ai-proxy', expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:8787/api/ai-proxy', expect.objectContaining({
       body: expect.stringContaining('https://aihubmix.com/v1')
     }));
   });
