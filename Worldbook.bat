@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 
-title Worldbook Launcher
+title Worldbook
 cd /d "%~dp0"
 
 if not exist "package.json" (
@@ -9,7 +9,7 @@ if not exist "package.json" (
   echo Current directory:
   echo %CD%
   echo.
-  echo Please keep this file next to package.json.
+  echo Please keep Worldbook.bat next to package.json.
   echo.
   pause
   exit /b 1
@@ -25,16 +25,16 @@ if errorlevel 1 (
   exit /b 1
 )
 
-where npm.cmd >nul 2>nul
-if errorlevel 1 (
-  echo npm was not found.
-  echo Please make sure Node.js is installed correctly.
-  echo.
-  pause
-  exit /b 1
-)
+if not exist "node_modules\.bin\vite.cmd" (
+  where npm.cmd >nul 2>nul
+  if errorlevel 1 (
+    echo npm was not found.
+    echo Please make sure Node.js is installed correctly.
+    echo.
+    pause
+    exit /b 1
+  )
 
-if not exist "node_modules" (
   echo Installing dependencies. This may take a while...
   call npm.cmd install
   if errorlevel 1 (
@@ -48,12 +48,12 @@ if not exist "node_modules" (
 )
 
 echo Starting Worldbook...
-echo The browser will open: http://localhost:5173/create
+echo Opening: http://localhost:5173/create
 echo Keep this window open while playing.
 echo.
 
-start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Start-Process 'http://localhost:5173/create'"
-call npm.cmd run dev -- --host 127.0.0.1
+start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Start-Process 'http://localhost:5173/create'"
+call ".\node_modules\.bin\vite.cmd" --host 127.0.0.1
 
 echo.
 echo Worldbook has stopped.
