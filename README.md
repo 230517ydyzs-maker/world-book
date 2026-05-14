@@ -12,9 +12,82 @@
 - 独立滚动：小说正文、左右侧栏和展开模块内容均可单独滚动。
 - 导出故事：导出纯小说正文，不包含行动建议。
 
+## 本地游玩
+
+世界书不一定需要部署到服务器。玩家可以把项目下载到自己的电脑，在本地浏览器里游玩；故事存档和 AI 模型配置都会保存在玩家自己的浏览器本地。
+
+### 1. 安装 Node.js
+
+先安装 Node.js 18 或更高版本：
+
+- Windows / macOS：从 [Node.js 官网](https://nodejs.org/) 下载 LTS 版本并安装。
+- Ubuntu / Debian：可以使用系统包管理器或 NodeSource 安装 Node.js。
+
+安装后，在终端里确认版本：
+
+```bash
+node -v
+npm -v
+```
+
+### 2. 下载项目
+
+方式一：在 GitHub 页面点击 `Code` -> `Download ZIP`，下载后解压。
+
+方式二：使用 Git 克隆：
+
+```bash
+git clone https://github.com/230517ydyzs-maker/world-book.git
+cd world-book
+```
+
+如果代码在 `codex/story-generator-mvp` 分支，可以切换到该分支：
+
+```bash
+git checkout codex/story-generator-mvp
+```
+
+### 3. 安装依赖并启动
+
+在项目目录执行：
+
+```bash
+npm install
+npm run dev
+```
+
+终端会显示一个本地地址，通常是：
+
+```text
+http://localhost:5173/
+```
+
+打开创建页面：
+
+```text
+http://localhost:5173/create
+```
+
+### 4. 配置 AI 模型
+
+进入网页后，玩家需要填写自己的模型供应商信息：
+
+- `Base URL`：模型供应商的 OpenAI 兼容接口地址，例如 `https://example.com/v1`
+- `模型名`：供应商提供的模型 ID
+- `API Key`：玩家自己的密钥
+
+本地游玩时，AI 请求仍然会从玩家自己的电脑发出。模型调用费用由玩家自己的模型供应商账号承担。
+
+### 5. 存档位置
+
+- 故事存档保存在浏览器 IndexedDB。
+- AI 模型配置记忆保存在浏览器 `localStorage`。
+- 清理浏览器站点数据可能会删除本地存档。
+- 更换浏览器或电脑后，原浏览器里的本地存档不会自动同步。
+
 ## 本地开发
 
-需要 Node.js 18 或更高版本。
+开发者同样需要 Node.js 18 或更高版本。
 
 ```bash
 npm install
@@ -75,4 +148,3 @@ Nginx 需要：
 - 本项目不内置任何模型供应商密钥。
 - 生产代理默认只允许 HTTPS 的模型 Base URL。
 - 如果公开给他人使用，应提示玩家自行承担模型调用费用。
-
