@@ -12,13 +12,17 @@
 - 独立滚动：小说正文、左右侧栏和展开模块内容均可单独滚动。
 - 导出故事：导出纯小说正文，不包含行动建议。
 
-## 本地游玩
+## 如何游玩
 
-世界书不一定需要部署到服务器。玩家可以把项目下载到自己的电脑，在本地浏览器里游玩；故事存档和 AI 模型配置都会保存在玩家自己的浏览器本地。
+世界书提供两种使用方式：本地部署和服务器部署。只想自己玩，选择本地部署；想让别人通过 IP 或域名访问，选择服务器部署。
 
-### 1. 安装 Node.js
+### 方式一：本地部署
 
-先安装 Node.js 18 或更高版本：
+本地部署适合玩家在自己的电脑上游玩，不需要云服务器。故事存档和 AI 模型配置都会保存在玩家自己的浏览器本地。
+
+#### 1. 安装 Node.js
+
+先安装 Node.js 18 或更高版本。
 
 - Windows / macOS：从 [Node.js 官网](https://nodejs.org/) 下载 LTS 版本并安装。
 - Ubuntu / Debian：可以使用系统包管理器或 NodeSource 安装 Node.js。
@@ -30,7 +34,7 @@ node -v
 npm -v
 ```
 
-### 2. 下载项目
+#### 2. 下载项目
 
 方式一：在 GitHub 页面点击 `Code` -> `Download ZIP`，下载后解压。
 
@@ -47,7 +51,7 @@ cd world-book
 git checkout codex/story-generator-mvp
 ```
 
-### 3. 安装依赖并启动
+#### 3. 安装依赖并启动
 
 在项目目录执行：
 
@@ -68,7 +72,7 @@ http://localhost:5173/
 http://localhost:5173/create
 ```
 
-### 4. 配置 AI 模型
+#### 4. 配置 AI 模型
 
 进入网页后，玩家需要填写自己的模型供应商信息：
 
@@ -78,12 +82,42 @@ http://localhost:5173/create
 
 本地游玩时，AI 请求仍然会从玩家自己的电脑发出。模型调用费用由玩家自己的模型供应商账号承担。
 
-### 5. 存档位置
+#### 5. 存档位置
 
 - 故事存档保存在浏览器 IndexedDB。
 - AI 模型配置记忆保存在浏览器 `localStorage`。
 - 清理浏览器站点数据可能会删除本地存档。
 - 更换浏览器或电脑后，原浏览器里的本地存档不会自动同步。
+
+### 方式二：服务器部署
+
+服务器部署适合把世界书放到云服务器上，让其他玩家通过公网 IP 或域名访问。
+
+常见部署方式是：
+
+1. 在服务器安装 Node.js、Nginx 和 PM2。
+2. 上传或克隆本项目代码。
+3. 执行 `npm install` 安装依赖。
+4. 执行 `npm run build` 生成前端静态文件。
+5. 使用 PM2 启动 `scripts/ai-proxy.mjs` 作为 AI 请求代理。
+6. 使用 Nginx 托管 `dist/`，并把 `/api/ai-proxy` 反向代理到本地代理服务。
+
+常用命令：
+
+```bash
+npm install
+npm run build
+pm2 start scripts/ai-proxy.mjs --name worldbook-ai-proxy
+pm2 save
+```
+
+Nginx 需要：
+
+- 静态文件根目录指向构建后的 `dist/`
+- `/api/ai-proxy` 反向代理到 `http://127.0.0.1:8787`
+- SPA fallback 到 `index.html`
+
+更完整的 Ubuntu + Nginx + PM2 部署示例见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
 
 ## 本地开发
 
@@ -120,27 +154,6 @@ npm run build
 - `API Key`：玩家自己的密钥
 
 API Key 会随请求发送到后端代理，不会写入导出的故事文本。模型配置记忆功能使用浏览器 `localStorage`，故事存档使用浏览器 IndexedDB。
-
-## 生产部署
-
-前端由 Nginx 托管 `dist/`，AI 请求通过 `scripts/ai-proxy.mjs` 转发。
-
-常见部署流程：
-
-```bash
-npm install
-npm run build
-pm2 start scripts/ai-proxy.mjs --name worldbook-ai-proxy
-pm2 save
-```
-
-Nginx 需要：
-
-- 静态文件根目录指向构建后的 `dist/`
-- `/api/ai-proxy` 反向代理到 `http://127.0.0.1:8787`
-- SPA fallback 到 `index.html`
-
-更完整的服务器部署示例见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
 
 ## 安全说明
 
