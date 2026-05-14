@@ -16,7 +16,75 @@ function extractJson(content: string): string {
     return codeBlockMatch[1].trim();
   }
 
+  const objectStart = trimmed.indexOf('{');
+  const objectEnd = trimmed.lastIndexOf('}');
+
+  if (objectStart >= 0 && objectEnd > objectStart) {
+    return trimmed.slice(objectStart, objectEnd + 1);
+  }
+
   return trimmed;
+}
+
+function escapeRawLineBreaksInStrings(json: string): string {
+  let output = '';
+  let inString = false;
+  let escaped = false;
+
+  for (const char of json) {
+    if (escaped) {
+      output += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\' && inString) {
+      output += char;
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      output += char;
+      continue;
+    }
+
+    if (inString && char === '\n') {
+      output += '\\n';
+      continue;
+    }
+
+    if (inString && char === '\r') {
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output;
+}
+
+function repairMissingFieldCommas(json: string): string {
+  return json.replace(
+    /("(?:verdict|verdict_reason|story_text|choice_point)"\s*:\s*(?:"(?:[^"\\]|\\.)*"|\{[\s\S]*?\}|\[[\s\S]*?\]))\s*(?="(?:verdict|verdict_reason|story_text|choice_point|state_patch)"\s*:)/g,
+    '$1,'
+  );
+}
+
+function parseJsonWithRepairs(content: string): Partial<AiTurnResponse> {
+  const json = extractJson(content);
+
+  try {
+    return JSON.parse(json) as Partial<AiTurnResponse>;
+  } catch {
+    const repaired = repairMissingFieldCommas(escapeRawLineBreaksInStrings(json));
+    try {
+      return JSON.parse(repaired) as Partial<AiTurnResponse>;
+    } catch {
+      throw new Error('AI 返回的 JSON 格式不完整，请重试或换一个模型');
+    }
+  }
 }
 
 function normalizeTextField(value: unknown, fieldName: string): string {
@@ -38,7 +106,7 @@ function normalizeTextField(value: unknown, fieldName: string): string {
 }
 
 export function parseAiTurnResponse(content: string): AiTurnResponse {
-  const parsed = JSON.parse(extractJson(content)) as Partial<AiTurnResponse>;
+  const parsed = parseJsonWithRepairs(content);
 
   if (!parsed.verdict || !verdicts.includes(parsed.verdict)) {
     throw new Error('Invalid AI verdict');

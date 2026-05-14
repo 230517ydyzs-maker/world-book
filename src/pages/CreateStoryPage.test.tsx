@@ -3,14 +3,21 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateStoryPage from './CreateStoryPage';
 import { useGameStore } from '../store/useGameStore';
+import { listStories } from '../storage/saveStore';
+
+vi.mock('../storage/saveStore', () => ({
+  listStories: vi.fn()
+}));
 
 describe('CreateStoryPage', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     useGameStore.setState({
       currentStory: undefined,
       isLoading: false,
       error: undefined
     });
+    vi.mocked(listStories).mockResolvedValue([]);
   });
 
   it('submits story creation input to the store', async () => {
@@ -20,15 +27,99 @@ describe('CreateStoryPage', () => {
 
     render(<CreateStoryPage />);
 
-    await user.clear(screen.getByLabelText('故事标题'));
+    expect(screen.getByLabelText('故事标题')).toHaveValue('');
+
     await user.type(screen.getByLabelText('故事标题'), '雨夜钟楼');
+    await user.type(screen.getByLabelText('题材'), '悬疑');
+    await user.type(screen.getByLabelText('风格'), '严肃短篇');
+    await user.type(screen.getByLabelText('世界观设定'), '一座被雨季封锁的旧城。');
+    await user.type(screen.getByLabelText('角色名字'), '林舟');
+    await user.type(screen.getByLabelText('角色身份'), '档案修复师');
+    await user.type(screen.getByLabelText('角色目标'), '查清父亲失踪真相');
+    await user.type(screen.getByLabelText('Base URL'), 'https://api.example.com/v1');
+    await user.type(screen.getByLabelText('模型名'), 'test-model');
     await user.click(screen.getByRole('button', { name: '进入故事' }));
 
     expect(createStory).toHaveBeenCalledWith(expect.objectContaining({
       title: '雨夜钟楼',
-      genre: expect.any(String),
-      baseUrl: expect.any(String),
-      model: expect.any(String)
+      genre: '悬疑',
+      baseUrl: 'https://api.example.com/v1',
+      model: 'test-model'
     }));
+  });
+
+  it('remembers the last AI model config and can clear it', async () => {
+    const createStory = vi.fn().mockResolvedValue(undefined);
+    useGameStore.setState({ createStory });
+    const user = userEvent.setup();
+
+    render(<CreateStoryPage />);
+
+    await user.type(screen.getByLabelText('故事标题'), '雨夜钟楼');
+    await user.type(screen.getByLabelText('题材'), '悬疑');
+    await user.type(screen.getByLabelText('风格'), '严肃短篇');
+    await user.type(screen.getByLabelText('世界观设定'), '一座被雨季封锁的旧城。');
+    await user.type(screen.getByLabelText('角色名字'), '林舟');
+    await user.type(screen.getByLabelText('角色身份'), '档案修复师');
+    await user.type(screen.getByLabelText('角色目标'), '查清父亲失踪真相');
+    await user.type(screen.getByLabelText('Base URL'), 'https://api.example.com/v1');
+    await user.type(screen.getByLabelText('模型名'), 'test-model');
+    await user.type(screen.getByLabelText('API Key'), 'sk-test');
+    await user.click(screen.getByRole('button', { name: '进入故事' }));
+
+    expect(window.localStorage.getItem('worldbook:model-config')).toContain('test-model');
+
+    render(<CreateStoryPage />);
+
+    expect(screen.getAllByLabelText('Base URL').at(-1)).toHaveValue('https://api.example.com/v1');
+    expect(screen.getAllByLabelText('模型名').at(-1)).toHaveValue('test-model');
+    expect(screen.getAllByLabelText('API Key').at(-1)).toHaveValue('sk-test');
+
+    await user.click(screen.getAllByRole('button', { name: '清除已保存配置' }).at(-1)!);
+
+    expect(window.localStorage.getItem('worldbook:model-config')).toBeNull();
+    expect(screen.getAllByLabelText('Base URL').at(-1)).toHaveValue('');
+    expect(screen.getAllByLabelText('模型名').at(-1)).toHaveValue('');
+    expect(screen.getAllByLabelText('API Key').at(-1)).toHaveValue('');
+  });
+
+  it('lists local saves and opens the selected story', async () => {
+    vi.mocked(listStories).mockResolvedValue([
+      {
+        id: 'story-1',
+        title: '雨夜钟楼',
+        turn: 3,
+        maxTurns: 15,
+        isEnded: false,
+        updatedAt: '2026-05-12T00:00:00.000Z'
+      },
+      {
+        id: 'story-2',
+        title: '勇者斗恶龙',
+        turn: 15,
+        maxTurns: 15,
+        isEnded: true,
+        updatedAt: '2026-05-11T00:00:00.000Z'
+      }
+    ]);
+    const assign = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { assign },
+      writable: true
+    });
+    const user = userEvent.setup();
+
+    render(<CreateStoryPage />);
+
+    await user.click(screen.getByRole('button', { name: '读取存档' }));
+
+    expect(await screen.findByText('雨夜钟楼')).toBeInTheDocument();
+    expect(screen.getByText('第 3 / 15 回合')).toBeInTheDocument();
+    expect(screen.getByText('勇者斗恶龙')).toBeInTheDocument();
+    expect(screen.getByText(/已完结/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '读取 雨夜钟楼' }));
+
+    expect(assign).toHaveBeenCalledWith('/play/story-1');
   });
 });

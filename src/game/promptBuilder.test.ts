@@ -40,8 +40,56 @@ describe('promptBuilder', () => {
 
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain('只输出 JSON');
+    expect(messages[0].content).toContain('必须是可被 JSON.parse 直接解析的合法 JSON');
+    expect(messages[0].content).toContain('字符串里的换行必须写成 \\n');
+    expect(messages[0].content).toContain('story_text 只能写小说正文');
+    expect(messages[0].content).toContain('不要写裁判说明');
     expect(messages[1].content).toContain('雨夜钟楼');
     expect(messages[1].content).toContain('普通人不能施法');
+  });
+
+  it('adds anti-summary prose rules to the system prompt', () => {
+    const messages = buildTurnPrompt(story, state, [], '我询问守夜人。');
+
+    expect(messages[0].content).toContain('避免总结式、解说式写法');
+    expect(messages[0].content).toContain('每回合只推进一个主要事件');
+    expect(messages[0].content).toContain('通过动作、环境、对话和可见细节呈现');
+    expect(messages[0].content).toContain('不要使用“显然、与此同时、然而、他意识到、这意味着、局势变得、命运的齿轮”');
+  });
+
+  it('makes NPCs, clues, and world rules active story constraints', () => {
+    const messages = buildTurnPrompt(
+      story,
+      {
+        ...state,
+        npcRegistry: [{ name: '守夜人', attitude: '戒备', knownFacts: ['知道旧案'] }]
+      },
+      [],
+      '我拿出银色徽章询问守夜人。'
+    );
+
+    expect(messages[0].content).toContain('已出现 NPC 不得无故消失或被遗忘');
+    expect(messages[0].content).toContain('当玩家行动涉及线索时，线索必须影响结果');
+    expect(messages[0].content).toContain('世界规则是硬约束');
+    expect(messages[1].content).toContain('守夜人(戒备：知道旧案)');
+    expect(messages[1].content).toContain('银色徽章');
+  });
+
+  it('asks for varied human-like pacing without exposing director notes', () => {
+    const messages = buildTurnPrompt(story, state, [], '我继续调查钟楼。');
+
+    expect(messages[0].content).toContain('先在内部完成导演层判断');
+    expect(messages[0].content).toContain('不要输出导演层');
+    expect(messages[0].content).toContain('每 3 回合至少改变一次叙事节奏');
+    expect(messages[0].content).toContain('禁止连续两回合使用同一种结尾方式');
+    expect(messages[0].content).toContain('不要每回合都抛出重大设定发现');
+  });
+
+  it('guides failed actions forward instead of hard stopping by default', () => {
+    const messages = buildTurnPrompt(story, state, [], '我召唤禁忌魔法。');
+
+    expect(messages[1].content).toContain('优先写成失败但剧情继续');
+    expect(messages[1].content).toContain('只有明显违反世界规则时才使用 rejected');
   });
 
   it('builds turn prompts with recent history and player action', () => {
@@ -64,5 +112,17 @@ describe('promptBuilder', () => {
     expect(messages[1].content).toContain('我询问守夜人。');
     expect(messages[1].content).toContain('银色徽章');
     expect(messages[1].content).toContain('你看见徽章编号。');
+  });
+
+  it('asks for an ending without a choice point on the final turn', () => {
+    const messages = buildTurnPrompt(
+      story,
+      { ...state, turn: 14, maxTurns: 15 },
+      [],
+      '我推开最后一扇门。'
+    );
+
+    expect(messages[1].content).toContain('这是最后一个回合');
+    expect(messages[1].content).toContain('不要生成下一步抉择');
   });
 });

@@ -55,6 +55,46 @@ describe('aiClient', () => {
     expect(parsed.choice_point).toContain('继续前进');
   });
 
+  it('repairs a missing comma between common AI JSON fields', () => {
+    const parsed = parseAiTurnResponse(`{
+      "verdict": "allowed",
+      "verdict_reason": "合理",
+      "story_text": "雨水落在钟楼上。"
+      "choice_point": "你要怎么做？",
+      "state_patch": {}
+    }`);
+
+    expect(parsed.story_text).toBe('雨水落在钟楼上。');
+    expect(parsed.choice_point).toBe('你要怎么做？');
+  });
+
+  it('extracts JSON when the model adds text around it', () => {
+    const parsed = parseAiTurnResponse(`下面是结果：
+    {
+      "verdict": "allowed",
+      "verdict_reason": "合理",
+      "story_text": "正文",
+      "choice_point": "抉择",
+      "state_patch": {}
+    }
+    以上。`);
+
+    expect(parsed.story_text).toBe('正文');
+  });
+
+  it('escapes raw line breaks inside AI JSON strings', () => {
+    const parsed = parseAiTurnResponse(`{
+      "verdict": "allowed",
+      "verdict_reason": "合理",
+      "story_text": "第一行
+第二行",
+      "choice_point": "抉择",
+      "state_patch": {}
+    }`);
+
+    expect(parsed.story_text).toBe('第一行\n第二行');
+  });
+
   it('calls OpenAI-compatible chat completions endpoint', async () => {
     const config: ModelConfig = {
       baseUrl: 'https://api.example.com/v1',

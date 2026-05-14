@@ -5,7 +5,35 @@ export interface ChatMessage {
   content: string;
 }
 
-const jsonContract = `只输出 JSON，不要输出 Markdown。JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。verdict 只能是 allowed, allowed_with_cost, failed_forward, rejected。verdict_reason、story_text、choice_point 必须是字符串；choice_point 可以在同一个字符串里写 1-3 个建议方向，但玩家仍可自由输入行动。`;
+const jsonContract = [
+  '只输出 JSON，不要输出 Markdown。',
+  '必须是可被 JSON.parse 直接解析的合法 JSON：字段之间必须有英文逗号，字符串里的换行必须写成 \\n。',
+  'JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。',
+  'verdict 只能是 allowed, allowed_with_cost, failed_forward, rejected。',
+  'verdict_reason、story_text、choice_point 必须是字符串。',
+  'story_text 只能写小说正文，不要写裁判说明、行动建议、状态总结或系统提示。',
+  'verdict_reason 只写给系统看的短裁判理由，不要复述到 story_text。',
+  'choice_point 只写 1-3 个行动建议方向；不要把建议方向混进 story_text。'
+].join('\n');
+
+const proseRules = [
+  '先在内部完成导演层判断，但不要输出导演层；最终只输出 JSON，story_text 只写小说层正文。',
+  '写作规则：避免总结式、解说式写法。',
+  '每回合只推进一个主要事件，不要把调查、战斗、逃亡、谈判全部塞进同一回合。',
+  '通过动作、环境、对话和可见细节呈现信息，少用抽象判断和局势说明。',
+  '不要使用“显然、与此同时、然而、他意识到、这意味着、局势变得、命运的齿轮”等模板化连接或总结句。',
+  '不要频繁重复同一能力名、神器名、血脉名、阵营名；必须提及时，优先写外在表现。',
+  '承接玩家动作后，写现场细节、具体后果或阻碍，最后停在自然的悬念或行动空隙。',
+  'NPC 连续性规则：必须参考当前 NPC 状态；已出现 NPC 不得无故消失或被遗忘；NPC 的态度、已知情报应影响行动结果。',
+  '线索规则：必须优先复用已有线索；当玩家行动涉及线索时，线索必须影响结果；不得凭空遗忘线索。',
+  '世界规则是硬约束，行动裁判和剧情后果必须遵守。',
+  '每 3 回合至少改变一次叙事节奏，可在调查、对话、行动、停顿、误判、局部代价之间切换。',
+  '禁止连续两回合使用同一种结尾方式，不要每次都用疑问、突发声响、黑影或重大揭示收尾。',
+  '最近 3 回合出现过的核心意象，本回合尽量避开，或换成更具体的动作、物件、身体反应。',
+  '不要每回合都抛出重大设定发现；允许小推进、小阻碍、小误会和人物态度变化。'
+].join('\n');
+
+const systemPrompt = `你是互动小说游戏的故事导演、行动裁判和状态记录器。\n${jsonContract}\n${proseRules}`;
 
 function storyBrief(story: StoryConfig): string {
   return [
@@ -22,6 +50,13 @@ function storyBrief(story: StoryConfig): string {
 }
 
 function stateBrief(state: GameState): string {
+  const npcBrief = state.npcRegistry
+    .map((npc) => {
+      const facts = npc.knownFacts.length ? `：${npc.knownFacts.join('、')}` : '';
+      return `${npc.name}(${npc.attitude}${facts})`;
+    })
+    .join('、');
+
   return [
     `回合：${state.turn}/${state.maxTurns}`,
     `地点：${state.currentLocation}`,
@@ -30,7 +65,7 @@ function stateBrief(state: GameState): string {
     `玩家状态：${state.playerStatus.join('、') || '无'}`,
     `线索：${state.clues.join('、') || '无'}`,
     `世界记忆：${state.worldMemory.join('、') || '无'}`,
-    `NPC：${state.npcRegistry.map((npc) => `${npc.name}(${npc.attitude})`).join('、') || '无'}`
+    `NPC：${npcBrief || '无'}`
   ].join('\n');
 }
 
@@ -41,11 +76,20 @@ function recentHistory(turns: TurnLog[]): string {
     .join('\n\n');
 }
 
+function turnInstruction(state: GameState): string {
+  const isFinalTurn = state.turn + 1 >= state.maxTurns;
+  if (isFinalTurn) {
+    return '这是最后一个回合。请把本次玩家行动推进为故事结局，story_text 写完整收束段落，choice_point 必须返回空字符串，不要生成下一步抉择。若行动有问题，优先写成失败但剧情继续；只有明显违反世界规则时才使用 rejected。';
+  }
+
+  return '请先裁判行动是否合理，再续写剧情。若行动有问题，优先写成失败但剧情继续，使用 failed_forward 或 allowed_with_cost；只有明显违反世界规则时才使用 rejected。';
+}
+
 export function buildOpeningPrompt(story: StoryConfig): ChatMessage[] {
   return [
     {
       role: 'system',
-      content: `你是互动小说游戏的故事导演、行动裁判和状态记录器。${jsonContract}`
+      content: systemPrompt
     },
     {
       role: 'user',
@@ -63,7 +107,7 @@ export function buildTurnPrompt(
   return [
     {
       role: 'system',
-      content: `你是互动小说游戏的故事导演、行动裁判和状态记录器。${jsonContract}`
+      content: systemPrompt
     },
     {
       role: 'user',
@@ -78,7 +122,7 @@ export function buildTurnPrompt(
         '',
         `玩家行动：${playerAction}`,
         '',
-        '请先裁判行动是否合理，再续写剧情。若 verdict 是 rejected，story_text 应简短说明为什么需要重写，不推进剧情。'
+        turnInstruction(state)
       ].join('\n')
     }
   ];

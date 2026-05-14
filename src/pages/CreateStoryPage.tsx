@@ -1,25 +1,55 @@
 import { FormEvent, useEffect, useState } from 'react';
 import ModelConfigForm from '../components/ModelConfigForm';
 import { useGameStore } from '../store/useGameStore';
+import { listStories, type StoryListItem } from '../storage/saveStore';
+
+const savedModelConfigKey = 'worldbook:model-config';
 
 const defaults = {
-  title: '雨夜钟楼',
-  genre: '悬疑',
-  style: '严肃短篇',
-  worldSetting: '一座被雨季封锁的旧城，钟楼每晚零点会响起不存在的第十三声钟。',
-  rulesText: '普通人不能施法\n午夜钟声会改变部分记忆',
-  characterName: '林舟',
-  characterIdentity: '档案修复师',
-  characterGoal: '查清父亲失踪真相',
-  abilitiesText: '观察\n推理\n档案修复',
-  weaknessesText: '体力较弱',
-  baseUrl: 'https://api.example.com/v1',
+  title: '',
+  genre: '',
+  style: '',
+  worldSetting: '',
+  rulesText: '',
+  characterName: '',
+  characterIdentity: '',
+  characterGoal: '',
+  abilitiesText: '',
+  weaknessesText: '',
+  baseUrl: '',
   apiKey: '',
-  model: 'your-model-name'
+  model: ''
 };
 
+type ModelConfigFields = Pick<typeof defaults, 'baseUrl' | 'apiKey' | 'model'>;
+
+function loadSavedModelConfig(): ModelConfigFields {
+  try {
+    const savedConfig = window.localStorage.getItem(savedModelConfigKey);
+    if (!savedConfig) {
+      return { baseUrl: '', apiKey: '', model: '' };
+    }
+
+    const parsed = JSON.parse(savedConfig) as Partial<ModelConfigFields>;
+    return {
+      baseUrl: typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '',
+      apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
+      model: typeof parsed.model === 'string' ? parsed.model : ''
+    };
+  } catch {
+    return { baseUrl: '', apiKey: '', model: '' };
+  }
+}
+
+function saveModelConfig(config: ModelConfigFields) {
+  window.localStorage.setItem(savedModelConfigKey, JSON.stringify(config));
+}
+
 export default function CreateStoryPage() {
-  const [form, setForm] = useState(defaults);
+  const [form, setForm] = useState(() => ({ ...defaults, ...loadSavedModelConfig() }));
+  const [saves, setSaves] = useState<StoryListItem[]>([]);
+  const [isSaveListOpen, setIsSaveListOpen] = useState(false);
+  const [saveListError, setSaveListError] = useState<string>();
   const { createStory, isLoading, error, currentStory } = useGameStore();
 
   useEffect(() => {
@@ -34,7 +64,36 @@ export default function CreateStoryPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    saveModelConfig({
+      baseUrl: form.baseUrl,
+      apiKey: form.apiKey,
+      model: form.model
+    });
     await createStory(form);
+  }
+
+  async function openSaveList() {
+    setIsSaveListOpen(true);
+    setSaveListError(undefined);
+    try {
+      setSaves(await listStories());
+    } catch {
+      setSaveListError('读取本地存档失败');
+    }
+  }
+
+  function openStory(storyId: string) {
+    window.location.assign(`/play/${storyId}`);
+  }
+
+  function clearSavedModelConfig() {
+    window.localStorage.removeItem(savedModelConfigKey);
+    setForm((current) => ({
+      ...current,
+      baseUrl: '',
+      apiKey: '',
+      model: ''
+    }));
   }
 
   return (
@@ -42,6 +101,31 @@ export default function CreateStoryPage() {
       <p className="eyebrow">故事生成器</p>
       <h1>创建一本新的小说</h1>
       <p className="lede">完成故事、角色和模型配置后，进入独立的游戏阅读页面。</p>
+      <div className="page-actions">
+        <button type="button" className="secondary-button" onClick={openSaveList}>
+          读取存档
+        </button>
+      </div>
+
+      {isSaveListOpen ? (
+        <section className="panel save-list" aria-label="本地存档">
+          <h2>本地存档</h2>
+          {saveListError ? <p className="error">{saveListError}</p> : null}
+          {!saveListError && saves.length === 0 ? <p>暂无存档</p> : null}
+          {saves.map((save) => (
+            <article key={save.id} className="save-list-item">
+              <div>
+                <strong>{save.title}</strong>
+                <p>第 {save.turn} / {save.maxTurns} 回合</p>
+                <p>{save.isEnded ? '已完结' : '进行中'} · {new Date(save.updatedAt).toLocaleString()}</p>
+              </div>
+              <button type="button" className="secondary-button" onClick={() => openStory(save.id)}>
+                读取 {save.title}
+              </button>
+            </article>
+          ))}
+        </section>
+      ) : null}
 
       <form className="panel form-grid" onSubmit={submit}>
         <label>
@@ -90,6 +174,7 @@ export default function CreateStoryPage() {
           apiKey={form.apiKey}
           model={form.model}
           onChange={update}
+          onClearSaved={clearSavedModelConfig}
         />
 
         {error ? <p className="error">{error}</p> : null}

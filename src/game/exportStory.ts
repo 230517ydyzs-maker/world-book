@@ -11,7 +11,7 @@ export function buildStoryExportText(story: SavedStory): string {
   ].join('\n');
 
   const body = story.turns
-    .map((turn) => [turn.storyText, '', `抉择点：${turn.choicePoint}`, ''].join('\n'))
+    .map((turn) => [turn.storyText, ''].join('\n'))
     .join('\n');
 
   return `${header}${body}`.trimEnd();

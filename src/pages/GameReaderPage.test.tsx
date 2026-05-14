@@ -17,8 +17,8 @@ describe('GameReaderPage', () => {
           title: '雨夜钟楼',
           genre: '悬疑',
           style: '严肃短篇',
-          worldSetting: '旧城',
-          rules: ['普通人不能施法'],
+          worldSetting: '旧城午夜会响起第十三声钟。',
+          rules: ['普通人不能施法', '午夜钟声会改变记忆'],
           playerCharacter: {
             name: '林舟',
             identity: '档案修复师',
@@ -59,13 +59,133 @@ describe('GameReaderPage', () => {
     });
   });
 
-  it('renders novel prose, sidebar state, and action input', async () => {
+  it('renders novel prose, two transparent sidebars, and action input', async () => {
     render(<GameReaderPage storyId="story-1" />);
 
     expect(screen.getByRole('heading', { name: '雨夜钟楼' })).toBeInTheDocument();
     expect(screen.getByText('雨水敲在钟楼的铜檐上。')).toBeInTheDocument();
-    expect(screen.getByText('守夜人')).toBeInTheDocument();
+    expect(screen.queryByText('你要怎么做？')).not.toBeInTheDocument();
+    expect(document.querySelector('.story-info-bar')).toBeNull();
+    expect(screen.getByRole('complementary', { name: '左侧故事信息' })).toHaveClass('sidebar-left');
+    expect(screen.getByRole('complementary', { name: '右侧故事信息' })).toHaveClass('sidebar-right');
+    expect(screen.getByRole('button', { name: '角色卡' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '世界设定' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '人物' })).toBeInTheDocument();
     expect(screen.getByLabelText('输入你的行动')).toBeInTheDocument();
+  });
+
+  it('places character and world setup on the left and runtime modules on the right', () => {
+    render(<GameReaderPage storyId="story-1" />);
+
+    const left = screen.getByRole('complementary', { name: '左侧故事信息' });
+    const right = screen.getByRole('complementary', { name: '右侧故事信息' });
+
+    expect(left).toHaveTextContent('角色卡');
+    expect(left).toHaveTextContent('世界设定');
+    expect(left).not.toHaveTextContent('世界记忆');
+    expect(left).not.toHaveTextContent('人物');
+    expect(left).not.toHaveTextContent('线索');
+    expect(left).not.toHaveTextContent('状态');
+
+    expect(right).toHaveTextContent('世界记忆');
+    expect(right).toHaveTextContent('人物');
+    expect(right).toHaveTextContent('线索');
+    expect(right).toHaveTextContent('状态');
+    expect(right).not.toHaveTextContent('角色卡');
+    expect(right).not.toHaveTextContent('世界设定');
+  });
+
+  it('hides nested character and world groups until their parent group is opened', async () => {
+    const user = userEvent.setup();
+
+    render(<GameReaderPage storyId="story-1" />);
+
+    expect(screen.getByText('地点：钟楼')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '身份' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '能力' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '弱点' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '世界观' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '世界规则' })).not.toBeInTheDocument();
+    expect(screen.queryByText('林舟，档案修复师')).not.toBeInTheDocument();
+    expect(screen.queryByText('观察')).not.toBeInTheDocument();
+    expect(screen.queryByText('体力较弱')).not.toBeInTheDocument();
+    expect(screen.queryByText('旧城午夜会响起第十三声钟。')).not.toBeInTheDocument();
+    expect(screen.queryByText('午夜钟声会改变记忆')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '角色卡' }));
+    await user.click(screen.getByRole('button', { name: '世界设定' }));
+
+    expect(screen.getByRole('button', { name: '身份' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '能力' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '弱点' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '世界观' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '世界规则' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '身份' }));
+    await user.click(screen.getByRole('button', { name: '能力' }));
+    await user.click(screen.getByRole('button', { name: '弱点' }));
+    await user.click(screen.getByRole('button', { name: '世界观' }));
+    await user.click(screen.getByRole('button', { name: '世界规则' }));
+    await user.click(screen.getByRole('button', { name: '世界记忆' }));
+    await user.click(screen.getByRole('button', { name: '线索' }));
+    await user.click(screen.getByRole('button', { name: '人物' }));
+
+    expect(screen.getByText('林舟，档案修复师')).toBeInTheDocument();
+    expect(screen.getByText('观察')).toBeInTheDocument();
+    expect(screen.getByText('体力较弱')).toBeInTheDocument();
+    expect(screen.getByText('旧城午夜会响起第十三声钟。')).toBeInTheDocument();
+    expect(screen.getAllByText('午夜钟声会改变记忆')).toHaveLength(2);
+    expect(screen.getByText('银色徽章')).toBeInTheDocument();
+    expect(screen.getByText('知道旧案')).toBeInTheDocument();
+  });
+
+  it('returns to the create page without deleting the current save', async () => {
+    const assign = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { assign },
+      writable: true
+    });
+    const user = userEvent.setup();
+
+    render(<GameReaderPage storyId="story-1" />);
+
+    await user.click(screen.getByRole('button', { name: '返回创建' }));
+
+    expect(assign).toHaveBeenCalledWith('/create');
+  });
+
+  it('shows choice suggestions only when the switch is enabled', async () => {
+    const user = userEvent.setup();
+
+    render(<GameReaderPage storyId="story-1" />);
+
+    expect(screen.queryByText('你要怎么做？')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: '显示行动建议' }));
+
+    expect(screen.getByText('你要怎么做？')).toBeInTheDocument();
+  });
+
+  it('hides action input and choice suggestions after the final turn', () => {
+    useGameStore.setState((current) => ({
+      currentStory: current.currentStory
+        ? {
+            ...current.currentStory,
+            state: {
+              ...current.currentStory.state,
+              turn: 15,
+              maxTurns: 15,
+              isEnded: true
+            }
+          }
+        : undefined
+    }));
+
+    render(<GameReaderPage storyId="story-1" />);
+
+    expect(screen.queryByLabelText('输入你的行动')).not.toBeInTheDocument();
+    expect(screen.queryByText('你要怎么做？')).not.toBeInTheDocument();
+    expect(screen.getByText('故事已完结')).toBeInTheDocument();
   });
 
   it('submits player actions', async () => {

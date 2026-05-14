@@ -54,6 +54,8 @@ describe('exportStory', () => {
 
     expect(text).toContain('雨夜钟楼');
     expect(text).toContain('雨落下。');
+    expect(text).not.toContain('抉择点');
+    expect(text).not.toContain('你要怎么做？');
     expect(text).not.toContain('secret');
   });
 });

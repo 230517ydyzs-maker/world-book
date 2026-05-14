@@ -1,6 +1,12 @@
 .worktrees/
+docs/superpowers/
 node_modules/
 dist/
+deploy-out/
+.env
+.env.*
+*.log
+coverage/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts

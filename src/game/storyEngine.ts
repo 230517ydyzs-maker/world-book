@@ -32,7 +32,8 @@ function createTurnLog(
   storyId: string,
   turn: number,
   playerAction: string,
-  response: AiTurnResponse
+  response: AiTurnResponse,
+  choicePointOverride?: string
 ): TurnLog {
   return {
     storyId,
@@ -41,7 +42,7 @@ function createTurnLog(
     verdict: response.verdict,
     verdictReason: response.verdict_reason,
     storyText: response.story_text,
-    choicePoint: response.choice_point,
+    choicePoint: choicePointOverride ?? response.choice_point,
     statePatch: response.state_patch,
     createdAt: new Date().toISOString()
   };
@@ -99,7 +100,14 @@ export async function playActionTurn(
   );
   const advancesTurn = response.verdict !== 'rejected';
   const turnNumber = advancesTurn ? savedStory.state.turn + 1 : savedStory.state.turn;
-  const log = createTurnLog(savedStory.config.id, turnNumber, playerAction, response);
+  const isFinalAdvancingTurn = advancesTurn && turnNumber >= savedStory.state.maxTurns;
+  const log = createTurnLog(
+    savedStory.config.id,
+    turnNumber,
+    playerAction,
+    response,
+    isFinalAdvancingTurn ? '' : undefined
+  );
   const patchedState = advancesTurn
     ? applyStatePatch(savedStory.state, response.state_patch)
     : savedStory.state;

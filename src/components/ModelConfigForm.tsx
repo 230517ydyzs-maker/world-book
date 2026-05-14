@@ -3,9 +3,10 @@ interface ModelConfigFormProps {
   apiKey: string;
   model: string;
   onChange: (field: 'baseUrl' | 'apiKey' | 'model', value: string) => void;
+  onClearSaved?: () => void;
 }
 
-export default function ModelConfigForm({ baseUrl, apiKey, model, onChange }: ModelConfigFormProps) {
+export default function ModelConfigForm({ baseUrl, apiKey, model, onChange, onClearSaved }: ModelConfigFormProps) {
   return (
     <section className="form-section">
       <h2>AI 模型配置</h2>
@@ -21,6 +22,11 @@ export default function ModelConfigForm({ baseUrl, apiKey, model, onChange }: Mo
         API Key
         <input type="password" value={apiKey} onChange={(event) => onChange('apiKey', event.target.value)} />
       </label>
+      {onClearSaved ? (
+        <button type="button" className="secondary-button" onClick={onClearSaved}>
+          清除已保存配置
+        </button>
+      ) : null}
     </section>
   );
 }
