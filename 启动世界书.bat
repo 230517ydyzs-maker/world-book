@@ -5,6 +5,17 @@ chcp 65001 >nul
 title 世界书 - 本地启动器
 cd /d "%~dp0"
 
+if not exist package.json (
+  echo 当前目录不是世界书项目目录：
+  echo %CD%
+  echo.
+  echo 请把此脚本放在包含 package.json 的项目根目录中运行。
+  echo 如果你想从桌面启动，请使用桌面专用快捷脚本。
+  echo.
+  pause
+  exit /b 1
+)
+
 where node >nul 2>nul
 if errorlevel 1 (
   echo 未检测到 Node.js。
