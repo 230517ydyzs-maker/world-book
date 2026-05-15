@@ -48,6 +48,16 @@ if not exist "node_modules\.bin\vite.cmd" (
 )
 
 echo Starting Worldbook...
+echo Checking AI proxy at http://127.0.0.1:8787 ...
+netstat -ano -p tcp | findstr /R /C:"127.0.0.1:8787 .*LISTENING" >nul
+if errorlevel 1 (
+  echo Starting AI proxy...
+  start "Worldbook AI Proxy" /min node.exe "scripts\ai-proxy.mjs"
+  timeout /t 1 /nobreak >nul
+) else (
+  echo AI proxy is already running.
+)
+
 echo Opening: http://localhost:5173/create
 echo Keep this window open while playing.
 echo.

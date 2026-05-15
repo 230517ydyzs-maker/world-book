@@ -53,7 +53,7 @@ git checkout codex/story-generator-mvp
 
 #### 3. 安装依赖并启动
 
-Windows 用户可以直接双击项目根目录里的 `Worldbook.bat`。脚本会自动安装依赖、启动本地服务，并打开创建页面。
+Windows 用户可以直接双击项目根目录里的 `Worldbook.bat`。脚本会自动安装依赖、启动本地网页服务和 AI 代理服务，并打开创建页面。
 
 也可以在项目目录手动执行：
 
