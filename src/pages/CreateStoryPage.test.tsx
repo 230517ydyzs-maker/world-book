@@ -167,4 +167,22 @@ describe('CreateStoryPage', () => {
       expect(worldColumn).toContainElement(screen.getByLabelText(label));
     }
   });
+
+  it('only requires the core story and character fields and hints them in-place', () => {
+    render(<CreateStoryPage />);
+
+    const requiredLabels = ['故事标题', '题材', '风格', '角色名字', '角色身份'];
+    const optionalLabels = ['角色目标', '能力', '弱点', '世界观设定', '世界规则', 'Base URL', '模型名', 'API Key'];
+
+    for (const label of requiredLabels) {
+      const field = screen.getByLabelText(label);
+      expect(field).toBeRequired();
+      expect(field).toHaveAttribute('placeholder', expect.stringContaining('必填'));
+    }
+
+    for (const label of optionalLabels) {
+      const field = screen.getByLabelText(label);
+      expect(field).not.toBeRequired();
+    }
+  });
 });

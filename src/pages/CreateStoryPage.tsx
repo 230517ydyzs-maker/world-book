@@ -143,27 +143,52 @@ export default function CreateStoryPage() {
           <legend>故事与角色</legend>
           <label>
             故事标题
-            <input value={form.title} onChange={(event) => update('title', event.target.value)} required />
+            <input
+              value={form.title}
+              placeholder="必填：输入故事标题"
+              onChange={(event) => update('title', event.target.value)}
+              required
+            />
           </label>
           <label>
             题材
-            <input value={form.genre} onChange={(event) => update('genre', event.target.value)} required />
+            <input
+              value={form.genre}
+              placeholder="必填：输入题材"
+              onChange={(event) => update('genre', event.target.value)}
+              required
+            />
           </label>
           <label>
             风格
-            <input value={form.style} onChange={(event) => update('style', event.target.value)} required />
+            <input
+              value={form.style}
+              placeholder="必填：输入风格"
+              onChange={(event) => update('style', event.target.value)}
+              required
+            />
           </label>
           <label>
             角色名字
-            <input value={form.characterName} onChange={(event) => update('characterName', event.target.value)} required />
+            <input
+              value={form.characterName}
+              placeholder="必填：输入角色名字"
+              onChange={(event) => update('characterName', event.target.value)}
+              required
+            />
           </label>
           <label>
             角色身份
-            <input value={form.characterIdentity} onChange={(event) => update('characterIdentity', event.target.value)} required />
+            <input
+              value={form.characterIdentity}
+              placeholder="必填：输入角色身份"
+              onChange={(event) => update('characterIdentity', event.target.value)}
+              required
+            />
           </label>
           <label>
             角色目标
-            <input value={form.characterGoal} onChange={(event) => update('characterGoal', event.target.value)} required />
+            <input value={form.characterGoal} onChange={(event) => update('characterGoal', event.target.value)} />
           </label>
           <label>
             能力
@@ -179,7 +204,7 @@ export default function CreateStoryPage() {
           <legend>世界与模型</legend>
           <label>
             世界观设定
-            <textarea value={form.worldSetting} onChange={(event) => update('worldSetting', event.target.value)} required />
+            <textarea value={form.worldSetting} onChange={(event) => update('worldSetting', event.target.value)} />
           </label>
           <label>
             世界规则
