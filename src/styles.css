@@ -30,6 +30,10 @@ textarea {
   width: min(760px, calc(100vw - 48px));
 }
 
+.create-page {
+  width: min(1040px, calc(100vw - 48px));
+}
+
 .eyebrow {
   color: #73736d;
   font-size: 14px;
@@ -80,8 +84,27 @@ textarea {
 
 .form-grid {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
   padding: 28px;
+}
+
+.form-column {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.form-column legend {
+  margin: 0 0 4px;
+  padding: 0;
+  color: #20201d;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .form-section {
@@ -94,6 +117,15 @@ textarea {
 .form-section h2 {
   margin: 0;
   font-size: 18px;
+}
+
+.form-submit-row {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  border-top: 1px solid #deded8;
+  padding-top: 18px;
 }
 
 label {
@@ -192,6 +224,16 @@ button:disabled {
   background: transparent;
   color: #20201d;
   border: 1px solid #deded8;
+}
+
+@media (max-width: 780px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-submit-row {
+    grid-column: auto;
+  }
 }
 
 .reader-layout {

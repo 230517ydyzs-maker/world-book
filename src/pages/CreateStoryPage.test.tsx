@@ -152,4 +152,19 @@ describe('CreateStoryPage', () => {
     expect(screen.queryByLabelText('本地存档')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '读取存档' })).toHaveAttribute('aria-expanded', 'false');
   });
+
+  it('groups story and character fields in the first column and the rest in the second column', () => {
+    render(<CreateStoryPage />);
+
+    const storyColumn = screen.getByRole('group', { name: '故事与角色' });
+    const worldColumn = screen.getByRole('group', { name: '世界与模型' });
+
+    for (const label of ['故事标题', '题材', '风格', '角色名字', '角色身份', '角色目标', '能力', '弱点']) {
+      expect(storyColumn).toContainElement(screen.getByLabelText(label));
+    }
+
+    for (const label of ['世界观设定', '世界规则', 'Base URL', '模型名', 'API Key']) {
+      expect(worldColumn).toContainElement(screen.getByLabelText(label));
+    }
+  });
 });
