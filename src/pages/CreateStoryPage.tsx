@@ -72,7 +72,12 @@ export default function CreateStoryPage() {
     await createStory(form);
   }
 
-  async function openSaveList() {
+  async function toggleSaveList() {
+    if (isSaveListOpen) {
+      setIsSaveListOpen(false);
+      return;
+    }
+
     setIsSaveListOpen(true);
     setSaveListError(undefined);
     try {
@@ -102,13 +107,19 @@ export default function CreateStoryPage() {
       <h1>创建一本新的小说</h1>
       <p className="lede">完成故事、角色和模型配置后，进入独立的游戏阅读页面。</p>
       <div className="page-actions">
-        <button type="button" className="secondary-button" onClick={openSaveList}>
-          读取存档
+        <button
+          type="button"
+          className="secondary-button"
+          aria-expanded={isSaveListOpen}
+          aria-controls="local-save-list"
+          onClick={toggleSaveList}
+        >
+          {isSaveListOpen ? '收起存档' : '读取存档'}
         </button>
       </div>
 
       {isSaveListOpen ? (
-        <section className="panel save-list" aria-label="本地存档">
+        <section id="local-save-list" className="panel save-list" aria-label="本地存档">
           <h2>本地存档</h2>
           {saveListError ? <p className="error">{saveListError}</p> : null}
           {!saveListError && saves.length === 0 ? <p>暂无存档</p> : null}

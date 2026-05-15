@@ -122,4 +122,34 @@ describe('CreateStoryPage', () => {
 
     expect(assign).toHaveBeenCalledWith('/play/story-1');
   });
+
+  it('toggles the local save list from the load save button', async () => {
+    vi.mocked(listStories).mockResolvedValue([
+      {
+        id: 'story-1',
+        title: '雨夜钟楼',
+        turn: 3,
+        maxTurns: 15,
+        isEnded: false,
+        updatedAt: '2026-05-12T00:00:00.000Z'
+      }
+    ]);
+    const user = userEvent.setup();
+
+    render(<CreateStoryPage />);
+
+    const toggleButton = screen.getByRole('button', { name: '读取存档' });
+    expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByLabelText('本地存档')).not.toBeInTheDocument();
+
+    await user.click(toggleButton);
+
+    expect(await screen.findByLabelText('本地存档')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '收起存档' })).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByRole('button', { name: '收起存档' }));
+
+    expect(screen.queryByLabelText('本地存档')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '读取存档' })).toHaveAttribute('aria-expanded', 'false');
+  });
 });
