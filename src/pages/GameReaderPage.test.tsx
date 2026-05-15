@@ -154,16 +154,36 @@ describe('GameReaderPage', () => {
     expect(assign).toHaveBeenCalledWith('/create');
   });
 
-  it('shows choice suggestions only when the switch is enabled', async () => {
+  it('shows interactive choice suggestions beside the action input and submits the clicked suggestion', async () => {
+    const playAction = vi.fn().mockResolvedValue(undefined);
+    useGameStore.setState((current) => ({
+      playAction,
+      currentStory: current.currentStory
+        ? {
+            ...current.currentStory,
+            turns: [
+              {
+                ...current.currentStory.turns[0],
+                choicePoint: 'A. 追问守夜人。 B. 检查银色徽章。'
+              }
+            ]
+          }
+        : undefined
+    }));
     const user = userEvent.setup();
 
     render(<GameReaderPage storyId="story-1" />);
 
-    expect(screen.queryByText('你要怎么做？')).not.toBeInTheDocument();
+    const actionArea = screen.getByRole('region', { name: '行动输入' });
+    expect(screen.getByRole('checkbox', { name: '显示行动建议' })).toBeInTheDocument();
+    expect(actionArea).toContainElement(screen.getByRole('checkbox', { name: '显示行动建议' }));
+    expect(screen.queryByRole('button', { name: '追问守夜人。' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('checkbox', { name: '显示行动建议' }));
 
-    expect(screen.getByText('你要怎么做？')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '追问守夜人。' }));
+
+    expect(playAction).toHaveBeenCalledWith('追问守夜人。');
   });
 
   it('hides action input and choice suggestions after the final turn', () => {

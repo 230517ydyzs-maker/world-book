@@ -269,24 +269,24 @@ button:disabled {
   font: 18px/2 Georgia, "Times New Roman", "SimSun", serif;
 }
 
-.choice-point {
-  max-width: 760px;
-  margin: 30px auto;
-  padding: 15px 17px;
-  border: 1px solid #deded8;
-  border-radius: 6px;
-  background: #efefeb;
-  color: #73736d;
-  line-height: 1.75;
-}
-
-.action-input {
+.action-panel {
   max-width: 760px;
   margin: 0 auto 46px;
   width: calc(100% - min(18vw, 240px));
   border: 1px solid #deded8;
   border-radius: 8px;
   padding: 14px 18px;
+  background: #fbfbfa;
+}
+
+.action-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-input {
+  flex: 1;
   display: flex;
   gap: 10px;
   background: #fbfbfa;
@@ -294,6 +294,31 @@ button:disabled {
 
 .action-input input {
   height: 44px;
+}
+
+.action-suggestion-toggle {
+  min-height: 44px;
+}
+
+.choice-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.choice-suggestion {
+  min-height: 38px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #20201d;
+  border: 1px solid #deded8;
+  white-space: normal;
+  text-align: left;
+}
+
+.choice-suggestion:hover:not(:disabled) {
+  border-color: #20201d;
 }
 
 .ending-note {
@@ -462,8 +487,13 @@ button:disabled {
     flex-wrap: wrap;
   }
 
-  .action-input {
+  .action-panel {
     width: calc(100% - 44px);
     margin-bottom: 32px;
+  }
+
+  .action-input-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

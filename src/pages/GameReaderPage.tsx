@@ -24,6 +24,8 @@ export default function GameReaderPage({ storyId }: GameReaderPageProps) {
     return <main className="page">正在读取故事...</main>;
   }
 
+  const latestChoicePoint = currentStory.turns.at(-1)?.choicePoint ?? '';
+
   function returnToCreate() {
     window.location.assign('/create');
   }
@@ -37,14 +39,6 @@ export default function GameReaderPage({ storyId }: GameReaderPageProps) {
             返回创建
           </button>
           <span>第 {currentStory.state.turn} / {currentStory.state.maxTurns} 回合</span>
-          <label className="inline-toggle">
-            <input
-              type="checkbox"
-              checked={showChoiceSuggestions}
-              onChange={(event) => setShowChoiceSuggestions(event.target.checked)}
-            />
-            显示行动建议
-          </label>
           <ExportStoryButton story={currentStory} />
         </div>
       </header>
@@ -60,13 +54,18 @@ export default function GameReaderPage({ storyId }: GameReaderPageProps) {
           <NovelView
             title={currentStory.config.title}
             turns={currentStory.turns}
-            showChoiceSuggestions={showChoiceSuggestions && !currentStory.state.isEnded}
           />
           <ErrorNotice message={error} />
           {currentStory.state.isEnded ? (
             <p className="ending-note">故事已完结</p>
           ) : (
-            <ActionInput disabled={isLoading} onSubmit={playAction} />
+            <ActionInput
+              disabled={isLoading}
+              choicePoint={latestChoicePoint}
+              showChoiceSuggestions={showChoiceSuggestions}
+              onToggleChoiceSuggestions={setShowChoiceSuggestions}
+              onSubmit={playAction}
+            />
           )}
         </main>
         <SidebarStatePanel
