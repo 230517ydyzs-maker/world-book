@@ -38,6 +38,7 @@ describe('CreateStoryPage', () => {
     await user.type(screen.getByLabelText('角色目标'), '查清父亲失踪真相');
     await user.type(screen.getByLabelText('Base URL'), 'https://api.example.com/v1');
     await user.type(screen.getByLabelText('模型名'), 'test-model');
+    await user.type(screen.getByLabelText('API Key'), 'sk-test');
     await user.click(screen.getByRole('button', { name: '进入故事' }));
 
     expect(createStory).toHaveBeenCalledWith(expect.objectContaining({
@@ -168,16 +169,16 @@ describe('CreateStoryPage', () => {
     }
   });
 
-  it('only requires the core story and character fields and hints them in-place', () => {
+  it('requires core story, character, and AI model fields with short in-place hints', () => {
     render(<CreateStoryPage />);
 
-    const requiredLabels = ['故事标题', '题材', '风格', '角色名字', '角色身份'];
-    const optionalLabels = ['角色目标', '能力', '弱点', '世界观设定', '世界规则', 'Base URL', '模型名', 'API Key'];
+    const requiredLabels = ['故事标题', '题材', '风格', '角色名字', '角色身份', 'Base URL', '模型名', 'API Key'];
+    const optionalLabels = ['角色目标', '能力', '弱点', '世界观设定', '世界规则'];
 
     for (const label of requiredLabels) {
       const field = screen.getByLabelText(label);
       expect(field).toBeRequired();
-      expect(field).toHaveAttribute('placeholder', expect.stringContaining('必填'));
+      expect(field).toHaveAttribute('placeholder', '必填');
     }
 
     for (const label of optionalLabels) {

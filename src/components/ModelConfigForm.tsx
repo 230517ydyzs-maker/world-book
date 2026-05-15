@@ -12,15 +12,15 @@ export default function ModelConfigForm({ baseUrl, apiKey, model, onChange, onCl
       <h2>AI 模型配置</h2>
       <label>
         Base URL
-        <input value={baseUrl} onChange={(event) => onChange('baseUrl', event.target.value)} />
+        <input value={baseUrl} placeholder="必填" onChange={(event) => onChange('baseUrl', event.target.value)} required />
       </label>
       <label>
         模型名
-        <input value={model} onChange={(event) => onChange('model', event.target.value)} />
+        <input value={model} placeholder="必填" onChange={(event) => onChange('model', event.target.value)} required />
       </label>
       <label>
         API Key
-        <input type="password" value={apiKey} onChange={(event) => onChange('apiKey', event.target.value)} />
+        <input type="password" value={apiKey} placeholder="必填" onChange={(event) => onChange('apiKey', event.target.value)} required />
       </label>
       {onClearSaved ? (
         <button type="button" className="secondary-button" onClick={onClearSaved}>

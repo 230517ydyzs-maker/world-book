@@ -145,7 +145,7 @@ export default function CreateStoryPage() {
             故事标题
             <input
               value={form.title}
-              placeholder="必填：输入故事标题"
+              placeholder="必填"
               onChange={(event) => update('title', event.target.value)}
               required
             />
@@ -154,7 +154,7 @@ export default function CreateStoryPage() {
             题材
             <input
               value={form.genre}
-              placeholder="必填：输入题材"
+              placeholder="必填"
               onChange={(event) => update('genre', event.target.value)}
               required
             />
@@ -163,7 +163,7 @@ export default function CreateStoryPage() {
             风格
             <input
               value={form.style}
-              placeholder="必填：输入风格"
+              placeholder="必填"
               onChange={(event) => update('style', event.target.value)}
               required
             />
@@ -172,7 +172,7 @@ export default function CreateStoryPage() {
             角色名字
             <input
               value={form.characterName}
-              placeholder="必填：输入角色名字"
+              placeholder="必填"
               onChange={(event) => update('characterName', event.target.value)}
               required
             />
@@ -181,7 +181,7 @@ export default function CreateStoryPage() {
             角色身份
             <input
               value={form.characterIdentity}
-              placeholder="必填：输入角色身份"
+              placeholder="必填"
               onChange={(event) => update('characterIdentity', event.target.value)}
               required
             />
