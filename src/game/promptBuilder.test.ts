@@ -57,6 +57,16 @@ describe('promptBuilder', () => {
     expect(messages[0].content).toContain('不要使用“显然、与此同时、然而、他意识到');
   });
 
+  it('folds AgentGal-style narrator, soul, memory, and choice guidance into the prompt', () => {
+    const messages = buildTurnPrompt(story, state, [], '我走向钟楼。');
+
+    expect(messages[0].content).toContain('角色灵魂');
+    expect(messages[0].content).toContain('场景调度');
+    expect(messages[0].content).toContain('长期记忆');
+    expect(messages[0].content).toContain('行动建议');
+    expect(messages[0].content).toContain('玩家可说或可做的一句话');
+  });
+
   it('makes NPCs, clues, and world rules active story constraints', () => {
     const messages = buildTurnPrompt(
       story,
