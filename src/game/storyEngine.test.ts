@@ -37,7 +37,7 @@ describe('storyEngine', () => {
     expect(story.state.clues).toEqual(['钟楼']);
   });
 
-  it('does not advance state when AI rejects an action', async () => {
+  it('treats every player action as allowed even if AI returns rejected', async () => {
     const story = await createStoryFromInput(
       {
         title: '雨夜钟楼',
@@ -71,9 +71,10 @@ describe('storyEngine', () => {
       state_patch: {}
     }));
 
-    expect(next.state.turn).toBe(1);
+    expect(next.state.turn).toBe(2);
     expect(next.turns).toHaveLength(2);
-    expect(next.turns[1].verdict).toBe('rejected');
+    expect(next.turns[1].verdict).toBe('allowed');
+    expect(next.turns[1].verdictReason).toBe('用户行动默认合理');
   });
 
   it('drops the choice point on the final advancing turn', async () => {

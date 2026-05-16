@@ -33,14 +33,16 @@ function createTurnLog(
   turn: number,
   playerAction: string,
   response: AiTurnResponse,
-  choicePointOverride?: string
+  choicePointOverride?: string,
+  verdictOverride?: AiTurnResponse['verdict'],
+  verdictReasonOverride?: string
 ): TurnLog {
   return {
     storyId,
     turn,
     playerAction,
-    verdict: response.verdict,
-    verdictReason: response.verdict_reason,
+    verdict: verdictOverride ?? response.verdict,
+    verdictReason: verdictReasonOverride ?? response.verdict_reason,
     storyText: response.story_text,
     choicePoint: choicePointOverride ?? response.choice_point,
     statePatch: response.state_patch,
@@ -98,27 +100,25 @@ export async function playActionTurn(
   const response = await runAi(
     buildTurnPrompt(savedStory.config, savedStory.state, savedStory.turns, playerAction)
   );
-  const advancesTurn = response.verdict !== 'rejected';
-  const turnNumber = advancesTurn ? savedStory.state.turn + 1 : savedStory.state.turn;
-  const isFinalAdvancingTurn = advancesTurn && turnNumber >= savedStory.state.maxTurns;
+  const turnNumber = savedStory.state.turn + 1;
+  const isFinalAdvancingTurn = turnNumber >= savedStory.state.maxTurns;
   const log = createTurnLog(
     savedStory.config.id,
     turnNumber,
     playerAction,
     response,
-    isFinalAdvancingTurn ? '' : undefined
+    isFinalAdvancingTurn ? '' : undefined,
+    'allowed',
+    '用户行动默认合理'
   );
-  const patchedState = advancesTurn
-    ? applyStatePatch(savedStory.state, response.state_patch)
-    : savedStory.state;
-  const nextTurn = advancesTurn ? turnNumber : savedStory.state.turn;
+  const patchedState = applyStatePatch(savedStory.state, response.state_patch);
 
   return {
     ...savedStory,
     state: {
       ...patchedState,
-      turn: nextTurn,
-      isEnded: patchedState.isEnded || nextTurn >= patchedState.maxTurns
+      turn: turnNumber,
+      isEnded: patchedState.isEnded || turnNumber >= patchedState.maxTurns
     },
     turns: [...savedStory.turns, log]
   };

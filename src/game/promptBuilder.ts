@@ -9,7 +9,7 @@ const jsonContract = [
   '只输出 JSON，不要输出 Markdown。',
   '必须是可被 JSON.parse 直接解析的合法 JSON：字段之间必须有英文逗号，字符串里的换行必须写成 \\n。',
   'JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。',
-  'verdict 只能是 allowed, allowed_with_cost, failed_forward, rejected。',
+  'verdict 固定使用 allowed。',
   'verdict_reason、story_text、choice_point 必须是字符串。',
   'story_text 只能写小说正文，不要写裁判说明、行动建议、状态总结或系统提示。',
   'verdict_reason 只写给系统看的短裁判理由，不要复述到 story_text。',
@@ -24,16 +24,17 @@ const proseRules = [
   '不要使用“显然、与此同时、然而、他意识到、这意味着、局势变得、命运的齿轮”等模板化连接或总结句。',
   '不要频繁重复同一能力名、神器名、血脉名、阵营名；必须提及时，优先写外在表现。',
   '承接玩家动作后，写现场细节、具体后果或阻碍，最后停在自然的悬念或行动空隙。',
+  '玩家输入的任何行动都视为合理，不要拒绝、拦截或要求玩家重新输入。',
   'NPC 连续性规则：必须参考当前 NPC 状态；已出现 NPC 不得无故消失或被遗忘；NPC 的态度、已知情报应影响行动结果。',
   '线索规则：必须优先复用已有线索；当玩家行动涉及线索时，线索必须影响结果；不得凭空遗忘线索。',
-  '世界规则是硬约束，行动裁判和剧情后果必须遵守。',
+  '世界规则用于塑造后果和代价，不用于否定玩家行动。',
   '每 3 回合至少改变一次叙事节奏，可在调查、对话、行动、停顿、误判、局部代价之间切换。',
   '禁止连续两回合使用同一种结尾方式，不要每次都用疑问、突发声响、黑影或重大揭示收尾。',
   '最近 3 回合出现过的核心意象，本回合尽量避开，或换成更具体的动作、物件、身体反应。',
   '不要每回合都抛出重大设定发现；允许小推进、小阻碍、小误会和人物态度变化。'
 ].join('\n');
 
-const systemPrompt = `你是互动小说游戏的故事导演、行动裁判和状态记录器。\n${jsonContract}\n${proseRules}`;
+const systemPrompt = `你是互动小说游戏的故事导演和状态记录器。\n${jsonContract}\n${proseRules}`;
 
 function storyBrief(story: StoryConfig): string {
   return [
@@ -79,10 +80,10 @@ function recentHistory(turns: TurnLog[]): string {
 function turnInstruction(state: GameState): string {
   const isFinalTurn = state.turn + 1 >= state.maxTurns;
   if (isFinalTurn) {
-    return '这是最后一个回合。请把本次玩家行动推进为故事结局，story_text 写完整收束段落，choice_point 必须返回空字符串，不要生成下一步抉择。若行动有问题，优先写成失败但剧情继续；只有明显违反世界规则时才使用 rejected。';
+    return '这是最后一个回合。请把本次玩家行动推进为故事结局，story_text 写完整收束段落，choice_point 必须返回空字符串，不要生成下一步抉择。不要拒绝玩家行动，verdict 使用 allowed。';
   }
 
-  return '请先裁判行动是否合理，再续写剧情。若行动有问题，优先写成失败但剧情继续，使用 failed_forward 或 allowed_with_cost；只有明显违反世界规则时才使用 rejected。';
+  return '不要审查或拒绝玩家行动；无论玩家输入什么，都按已经发生的合理行动继续写剧情。可以通过后果、代价、误会或阻碍来保持故事张力，verdict 使用 allowed。';
 }
 
 export function buildOpeningPrompt(story: StoryConfig): ChatMessage[] {

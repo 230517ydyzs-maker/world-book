@@ -70,7 +70,7 @@ describe('promptBuilder', () => {
 
     expect(messages[0].content).toContain('已出现 NPC 不得无故消失或被遗忘');
     expect(messages[0].content).toContain('当玩家行动涉及线索时，线索必须影响结果');
-    expect(messages[0].content).toContain('世界规则是硬约束');
+    expect(messages[0].content).toContain('世界规则用于塑造后果和代价');
     expect(messages[1].content).toContain('守夜人(戒备：知道旧案)');
     expect(messages[1].content).toContain('银色徽章');
   });
@@ -85,11 +85,13 @@ describe('promptBuilder', () => {
     expect(messages[0].content).toContain('不要每回合都抛出重大设定发现');
   });
 
-  it('guides failed actions forward instead of hard stopping by default', () => {
+  it('tells the AI to accept every player action instead of judging it invalid', () => {
     const messages = buildTurnPrompt(story, state, [], '我召唤禁忌魔法。');
 
-    expect(messages[1].content).toContain('优先写成失败但剧情继续');
-    expect(messages[1].content).toContain('只有明显违反世界规则时才使用 rejected');
+    expect(messages[0].content).toContain('玩家输入的任何行动都视为合理');
+    expect(messages[1].content).toContain('不要审查或拒绝玩家行动');
+    expect(messages[1].content).toContain('verdict 使用 allowed');
+    expect(messages[1].content).not.toContain('只有明显违反世界规则时才使用 rejected');
   });
 
   it('builds turn prompts with recent history and player action', () => {
