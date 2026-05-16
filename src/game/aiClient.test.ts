@@ -95,6 +95,34 @@ describe('aiClient', () => {
     expect(parsed.story_text).toBe('第一行\n第二行');
   });
 
+  it('recovers usable text when the AI JSON is cut off after choice_point', () => {
+    const parsed = parseAiTurnResponse(`{
+      "verdict": "allowed",
+      "verdict_reason": "ok",
+      "story_text": "The door opens.",
+      "choice_point": "Step inside or wait outside?"
+    `);
+
+    expect(parsed.verdict).toBe('allowed');
+    expect(parsed.story_text).toBe('The door opens.');
+    expect(parsed.choice_point).toBe('Step inside or wait outside?');
+    expect(parsed.state_patch).toEqual({});
+  });
+
+  it('recovers usable text when a trailing state_patch object is incomplete', () => {
+    const parsed = parseAiTurnResponse(`{
+      "verdict": "allowed",
+      "verdict_reason": "ok",
+      "story_text": "The bell rings again.",
+      "choice_point": "Follow the sound.",
+      "state_patch": { "location": "Clock tower"
+    `);
+
+    expect(parsed.story_text).toBe('The bell rings again.');
+    expect(parsed.choice_point).toBe('Follow the sound.');
+    expect(parsed.state_patch).toEqual({});
+  });
+
   it('calls OpenAI-compatible chat completions endpoint', async () => {
     const config: ModelConfig = {
       baseUrl: 'https://api.example.com/v1',

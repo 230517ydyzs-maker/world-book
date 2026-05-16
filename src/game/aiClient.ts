@@ -72,6 +72,82 @@ function repairMissingFieldCommas(json: string): string {
   );
 }
 
+function readJsonStringField(json: string, fieldName: keyof AiTurnResponse): string | undefined {
+  const fieldMarker = `"${fieldName}"`;
+  const markerIndex = json.indexOf(fieldMarker);
+  if (markerIndex < 0) {
+    return undefined;
+  }
+
+  const colonIndex = json.indexOf(':', markerIndex + fieldMarker.length);
+  if (colonIndex < 0) {
+    return undefined;
+  }
+
+  let valueStart = colonIndex + 1;
+  while (/\s/.test(json[valueStart] ?? '')) {
+    valueStart += 1;
+  }
+
+  if (json[valueStart] !== '"') {
+    return undefined;
+  }
+
+  let output = '';
+  let escaped = false;
+  for (let index = valueStart + 1; index < json.length; index += 1) {
+    const char = json[index];
+    if (escaped) {
+      output += `\\${char}`;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+
+    if (char === '"') {
+      try {
+        return JSON.parse(`"${output}"`) as string;
+      } catch {
+        return output;
+      }
+    }
+
+    if (char === '\n') {
+      output += '\\n';
+      continue;
+    }
+
+    if (char !== '\r') {
+      output += char;
+    }
+  }
+
+  return undefined;
+}
+
+function parsePartialAiResponse(json: string): Partial<AiTurnResponse> | null {
+  const verdict = readJsonStringField(json, 'verdict');
+  const verdictReason = readJsonStringField(json, 'verdict_reason');
+  const storyText = readJsonStringField(json, 'story_text');
+  const choicePoint = readJsonStringField(json, 'choice_point');
+
+  if (!verdict || !verdicts.includes(verdict as Verdict) || !storyText || choicePoint === undefined) {
+    return null;
+  }
+
+  return {
+    verdict: verdict as Verdict,
+    verdict_reason: verdictReason ?? 'AI 返回不完整，已保留可用正文',
+    story_text: storyText,
+    choice_point: choicePoint,
+    state_patch: {}
+  };
+}
+
 function parseJsonWithRepairs(content: string): Partial<AiTurnResponse> {
   const json = extractJson(content);
 
@@ -82,6 +158,11 @@ function parseJsonWithRepairs(content: string): Partial<AiTurnResponse> {
     try {
       return JSON.parse(repaired) as Partial<AiTurnResponse>;
     } catch {
+      const partial = parsePartialAiResponse(repaired);
+      if (partial) {
+        return partial;
+      }
+
       throw new Error('AI 返回的 JSON 格式不完整，请重试或换一个模型');
     }
   }
