@@ -33,16 +33,12 @@ function createTurnLog(
   turn: number,
   playerAction: string,
   response: AiTurnResponse,
-  choicePointOverride?: string,
-  verdictOverride?: AiTurnResponse['verdict'],
-  verdictReasonOverride?: string
+  choicePointOverride?: string
 ): TurnLog {
   return {
     storyId,
     turn,
     playerAction,
-    verdict: verdictOverride ?? response.verdict,
-    verdictReason: verdictReasonOverride ?? response.verdict_reason,
     storyText: response.story_text,
     choicePoint: choicePointOverride ?? response.choice_point,
     statePatch: response.state_patch,
@@ -107,9 +103,7 @@ export async function playActionTurn(
     turnNumber,
     playerAction,
     response,
-    isFinalAdvancingTurn ? '' : undefined,
-    'allowed',
-    '用户行动默认合理'
+    isFinalAdvancingTurn ? '' : undefined
   );
   const patchedState = applyStatePatch(savedStory.state, response.state_patch);
 

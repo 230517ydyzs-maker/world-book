@@ -47,8 +47,6 @@ describe('GameReaderPage', () => {
             storyId: 'story-1',
             turn: 3,
             playerAction: '询问守夜人',
-            verdict: 'allowed',
-            verdictReason: '合理',
             storyText: '雨水敲在钟楼的铜檐上。',
             choicePoint: '你要怎么做？',
             statePatch: {},

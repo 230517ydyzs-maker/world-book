@@ -35,15 +35,15 @@ const state: GameState = {
 };
 
 describe('promptBuilder', () => {
-  it('builds opening prompts requiring strict JSON', () => {
+  it('builds opening prompts requiring strict JSON without review fields', () => {
     const messages = buildOpeningPrompt(story);
 
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain('只输出 JSON');
     expect(messages[0].content).toContain('必须是可被 JSON.parse 直接解析的合法 JSON');
-    expect(messages[0].content).toContain('字符串里的换行必须写成 \\n');
-    expect(messages[0].content).toContain('story_text 只能写小说正文');
-    expect(messages[0].content).toContain('不要写裁判说明');
+    expect(messages[0].content).toContain('JSON 字段必须包含 story_text, choice_point, state_patch');
+    expect(messages[0].content).not.toContain('verdict');
+    expect(messages[0].content).not.toContain('verdict_reason');
     expect(messages[1].content).toContain('雨夜钟楼');
     expect(messages[1].content).toContain('普通人不能施法');
   });
@@ -54,7 +54,7 @@ describe('promptBuilder', () => {
     expect(messages[0].content).toContain('避免总结式、解说式写法');
     expect(messages[0].content).toContain('每回合只推进一个主要事件');
     expect(messages[0].content).toContain('通过动作、环境、对话和可见细节呈现');
-    expect(messages[0].content).toContain('不要使用“显然、与此同时、然而、他意识到、这意味着、局势变得、命运的齿轮”');
+    expect(messages[0].content).toContain('不要使用“显然、与此同时、然而、他意识到');
   });
 
   it('makes NPCs, clues, and world rules active story constraints', () => {
@@ -78,20 +78,21 @@ describe('promptBuilder', () => {
   it('asks for varied human-like pacing without exposing director notes', () => {
     const messages = buildTurnPrompt(story, state, [], '我继续调查钟楼。');
 
-    expect(messages[0].content).toContain('先在内部完成导演层判断');
+    expect(messages[0].content).toContain('先在内部完成导演层思考');
     expect(messages[0].content).toContain('不要输出导演层');
     expect(messages[0].content).toContain('每 3 回合至少改变一次叙事节奏');
     expect(messages[0].content).toContain('禁止连续两回合使用同一种结尾方式');
     expect(messages[0].content).toContain('不要每回合都抛出重大设定发现');
   });
 
-  it('tells the AI to accept every player action instead of judging it invalid', () => {
+  it('tells the AI to continue from any player action without review language', () => {
     const messages = buildTurnPrompt(story, state, [], '我召唤禁忌魔法。');
 
-    expect(messages[0].content).toContain('玩家输入的任何行动都视为合理');
-    expect(messages[1].content).toContain('不要审查或拒绝玩家行动');
-    expect(messages[1].content).toContain('verdict 使用 allowed');
-    expect(messages[1].content).not.toContain('只有明显违反世界规则时才使用 rejected');
+    expect(messages[0].content).toContain('玩家输入的任何行动都已经发生');
+    expect(messages[1].content).toContain('无论玩家输入什么，都按已经发生的行动继续写剧情');
+    expect(messages[1].content).not.toContain('审查');
+    expect(messages[1].content).not.toContain('裁判');
+    expect(messages[1].content).not.toContain('verdict');
   });
 
   it('builds turn prompts with recent history and player action', () => {
@@ -100,8 +101,6 @@ describe('promptBuilder', () => {
         storyId: 'story-1',
         turn: 1,
         playerAction: '我观察徽章。',
-        verdict: 'allowed',
-        verdictReason: '符合能力。',
         storyText: '你看见徽章编号。',
         choicePoint: '你要怎么做？',
         statePatch: {},

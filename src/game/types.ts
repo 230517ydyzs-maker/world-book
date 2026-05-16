@@ -1,7 +1,5 @@
 export type DangerLevel = 'low' | 'medium' | 'high';
 
-export type Verdict = 'allowed' | 'allowed_with_cost' | 'failed_forward' | 'rejected';
-
 export interface ModelConfig {
   baseUrl: string;
   apiKey: string;
@@ -63,8 +61,6 @@ export interface TurnLog {
   storyId: string;
   turn: number;
   playerAction: string;
-  verdict: Verdict;
-  verdictReason: string;
   storyText: string;
   choicePoint: string;
   statePatch: AiStatePatch;
@@ -72,8 +68,6 @@ export interface TurnLog {
 }
 
 export interface AiTurnResponse {
-  verdict: Verdict;
-  verdict_reason: string;
   story_text: string;
   choice_point: string;
   state_patch: AiStatePatch;

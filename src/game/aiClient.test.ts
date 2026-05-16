@@ -9,39 +9,25 @@ describe('aiClient', () => {
 
   it('parses clean JSON AI responses', () => {
     const parsed = parseAiTurnResponse(JSON.stringify({
-      verdict: 'allowed',
-      verdict_reason: '符合设定',
       story_text: '雨继续下。',
       choice_point: '你要怎么做？',
       state_patch: { cluesAdded: ['银色徽章'] }
     }));
 
-    expect(parsed.verdict).toBe('allowed');
+    expect(parsed.story_text).toBe('雨继续下。');
     expect(parsed.state_patch.cluesAdded).toEqual(['银色徽章']);
   });
 
   it('parses JSON wrapped in a markdown code block', () => {
     const parsed = parseAiTurnResponse(`\`\`\`json
-{"verdict":"allowed","verdict_reason":"符合设定","story_text":"正文","choice_point":"抉择","state_patch":{}}
+{"story_text":"正文","choice_point":"抉择","state_patch":{}}
 \`\`\``);
 
     expect(parsed.story_text).toBe('正文');
   });
 
-  it('rejects invalid verdict values', () => {
-    expect(() => parseAiTurnResponse(JSON.stringify({
-      verdict: 'maybe',
-      verdict_reason: 'x',
-      story_text: 'x',
-      choice_point: 'x',
-      state_patch: {}
-    }))).toThrow('Invalid AI verdict');
-  });
-
   it('normalizes array and object text fields from flexible model output', () => {
     const parsed = parseAiTurnResponse(JSON.stringify({
-      verdict: 'allowed',
-      verdict_reason: ['符合角色能力', '风险较低'],
       story_text: { paragraph1: '你走向钟楼。', paragraph2: '雨声更密了。' },
       choice_point: [
         { A: '继续前进' },
@@ -50,15 +36,12 @@ describe('aiClient', () => {
       state_patch: {}
     }));
 
-    expect(parsed.verdict_reason).toContain('符合角色能力');
     expect(parsed.story_text).toContain('你走向钟楼。');
     expect(parsed.choice_point).toContain('继续前进');
   });
 
   it('repairs a missing comma between common AI JSON fields', () => {
     const parsed = parseAiTurnResponse(`{
-      "verdict": "allowed",
-      "verdict_reason": "合理",
       "story_text": "雨水落在钟楼上。"
       "choice_point": "你要怎么做？",
       "state_patch": {}
@@ -71,8 +54,6 @@ describe('aiClient', () => {
   it('extracts JSON when the model adds text around it', () => {
     const parsed = parseAiTurnResponse(`下面是结果：
     {
-      "verdict": "allowed",
-      "verdict_reason": "合理",
       "story_text": "正文",
       "choice_point": "抉择",
       "state_patch": {}
@@ -84,8 +65,6 @@ describe('aiClient', () => {
 
   it('escapes raw line breaks inside AI JSON strings', () => {
     const parsed = parseAiTurnResponse(`{
-      "verdict": "allowed",
-      "verdict_reason": "合理",
       "story_text": "第一行
 第二行",
       "choice_point": "抉择",
@@ -97,13 +76,10 @@ describe('aiClient', () => {
 
   it('recovers usable text when the AI JSON is cut off after choice_point', () => {
     const parsed = parseAiTurnResponse(`{
-      "verdict": "allowed",
-      "verdict_reason": "ok",
       "story_text": "The door opens.",
       "choice_point": "Step inside or wait outside?"
     `);
 
-    expect(parsed.verdict).toBe('allowed');
     expect(parsed.story_text).toBe('The door opens.');
     expect(parsed.choice_point).toBe('Step inside or wait outside?');
     expect(parsed.state_patch).toEqual({});
@@ -111,8 +87,6 @@ describe('aiClient', () => {
 
   it('recovers usable text when a trailing state_patch object is incomplete', () => {
     const parsed = parseAiTurnResponse(`{
-      "verdict": "allowed",
-      "verdict_reason": "ok",
       "story_text": "The bell rings again.",
       "choice_point": "Follow the sound.",
       "state_patch": { "location": "Clock tower"
@@ -136,8 +110,6 @@ describe('aiClient', () => {
           {
             message: {
               content: JSON.stringify({
-                verdict: 'allowed',
-                verdict_reason: '符合设定',
                 story_text: '正文',
                 choice_point: '抉择',
                 state_patch: {}
@@ -173,7 +145,7 @@ describe('aiClient', () => {
       { baseUrl: 'https://aihubmix.com/v1', apiKey: 'sk-test', model: 'deepseek-v4-flash' },
       [{ role: 'user', content: 'hello' }],
       fetchMock
-    )).rejects.toThrow('AI 请求失败，状态码 404：model not found');
+    )).rejects.toThrow('AI 请求失败，状态码 404，model not found');
   });
 
   it('adds /v1 to provider hosts that omit it', async () => {
@@ -184,8 +156,6 @@ describe('aiClient', () => {
           {
             message: {
               content: JSON.stringify({
-                verdict: 'allowed',
-                verdict_reason: '符合设定',
                 story_text: '正文',
                 choice_point: '抉择',
                 state_patch: {}

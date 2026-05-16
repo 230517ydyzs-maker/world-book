@@ -1,7 +1,5 @@
 import type { ChatMessage } from './promptBuilder';
-import type { AiTurnResponse, ModelConfig, Verdict } from './types';
-
-const verdicts: Verdict[] = ['allowed', 'allowed_with_cost', 'failed_forward', 'rejected'];
+import type { AiTurnResponse, ModelConfig } from './types';
 
 function normalizeBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim().replace(/\/+$/, '');
@@ -67,7 +65,7 @@ function escapeRawLineBreaksInStrings(json: string): string {
 
 function repairMissingFieldCommas(json: string): string {
   return json.replace(
-    /("(?:verdict|verdict_reason|story_text|choice_point)"\s*:\s*(?:"(?:[^"\\]|\\.)*"|\{[\s\S]*?\}|\[[\s\S]*?\]))\s*(?="(?:verdict|verdict_reason|story_text|choice_point|state_patch)"\s*:)/g,
+    /("(?:story_text|choice_point)"\s*:\s*(?:"(?:[^"\\]|\\.)*"|\{[\s\S]*?\}|\[[\s\S]*?\]))\s*(?="(?:story_text|choice_point|state_patch)"\s*:)/g,
     '$1,'
   );
 }
@@ -130,18 +128,14 @@ function readJsonStringField(json: string, fieldName: keyof AiTurnResponse): str
 }
 
 function parsePartialAiResponse(json: string): Partial<AiTurnResponse> | null {
-  const verdict = readJsonStringField(json, 'verdict');
-  const verdictReason = readJsonStringField(json, 'verdict_reason');
   const storyText = readJsonStringField(json, 'story_text');
   const choicePoint = readJsonStringField(json, 'choice_point');
 
-  if (!verdict || !verdicts.includes(verdict as Verdict) || !storyText || choicePoint === undefined) {
+  if (!storyText || choicePoint === undefined) {
     return null;
   }
 
   return {
-    verdict: verdict as Verdict,
-    verdict_reason: verdictReason ?? 'AI 返回不完整，已保留可用正文',
     story_text: storyText,
     choice_point: choicePoint,
     state_patch: {}
@@ -188,17 +182,10 @@ function normalizeTextField(value: unknown, fieldName: string): string {
 
 export function parseAiTurnResponse(content: string): AiTurnResponse {
   const parsed = parseJsonWithRepairs(content);
-
-  if (!parsed.verdict || !verdicts.includes(parsed.verdict)) {
-    throw new Error('Invalid AI verdict');
-  }
-  const verdictReason = normalizeTextField(parsed.verdict_reason, 'verdict_reason');
   const storyText = normalizeTextField(parsed.story_text, 'story_text');
   const choicePoint = normalizeTextField(parsed.choice_point, 'choice_point');
 
   return {
-    verdict: parsed.verdict,
-    verdict_reason: verdictReason,
     story_text: storyText,
     choice_point: choicePoint,
     state_patch: parsed.state_patch ?? {}
@@ -216,13 +203,13 @@ async function responseErrorMessage(response: Response): Promise<string> {
     const payload = JSON.parse(text);
     const message = payload?.error?.message ?? payload?.message ?? payload?.error;
     if (typeof message === 'string') {
-      return `AI 请求失败，状态码 ${response.status}：${message}`;
+      return `AI 请求失败，状态码 ${response.status}，${message}`;
     }
   } catch {
-    return `AI 请求失败，状态码 ${response.status}：${text.slice(0, 240)}`;
+    return `AI 请求失败，状态码 ${response.status}，${text.slice(0, 240)}`;
   }
 
-  return `AI 请求失败，状态码 ${response.status}：${text.slice(0, 240)}`;
+  return `AI 请求失败，状态码 ${response.status}，${text.slice(0, 240)}`;
 }
 
 export async function callAiModel(

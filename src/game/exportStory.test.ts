@@ -40,8 +40,6 @@ describe('exportStory', () => {
           storyId: 'story-1',
           turn: 1,
           playerAction: '故事开始',
-          verdict: 'allowed',
-          verdictReason: '开篇',
           storyText: '雨落下。',
           choicePoint: '你要怎么做？',
           statePatch: {},

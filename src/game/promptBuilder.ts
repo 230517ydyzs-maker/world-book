@@ -8,23 +8,21 @@ export interface ChatMessage {
 const jsonContract = [
   '只输出 JSON，不要输出 Markdown。',
   '必须是可被 JSON.parse 直接解析的合法 JSON：字段之间必须有英文逗号，字符串里的换行必须写成 \\n。',
-  'JSON 字段必须包含 verdict, verdict_reason, story_text, choice_point, state_patch。',
-  'verdict 固定使用 allowed。',
-  'verdict_reason、story_text、choice_point 必须是字符串。',
-  'story_text 只能写小说正文，不要写裁判说明、行动建议、状态总结或系统提示。',
-  'verdict_reason 只写给系统看的短裁判理由，不要复述到 story_text。',
+  'JSON 字段必须包含 story_text, choice_point, state_patch。',
+  'story_text、choice_point 必须是字符串。',
+  'story_text 只能写小说正文，不要写行动建议、状态总结或系统提示。',
   'choice_point 只写 1-3 个行动建议方向；不要把建议方向混进 story_text。'
 ].join('\n');
 
 const proseRules = [
-  '先在内部完成导演层判断，但不要输出导演层；最终只输出 JSON，story_text 只写小说层正文。',
+  '先在内部完成导演层思考，但不要输出导演层；最终只输出 JSON，story_text 只写小说层正文。',
   '写作规则：避免总结式、解说式写法。',
   '每回合只推进一个主要事件，不要把调查、战斗、逃亡、谈判全部塞进同一回合。',
   '通过动作、环境、对话和可见细节呈现信息，少用抽象判断和局势说明。',
   '不要使用“显然、与此同时、然而、他意识到、这意味着、局势变得、命运的齿轮”等模板化连接或总结句。',
   '不要频繁重复同一能力名、神器名、血脉名、阵营名；必须提及时，优先写外在表现。',
   '承接玩家动作后，写现场细节、具体后果或阻碍，最后停在自然的悬念或行动空隙。',
-  '玩家输入的任何行动都视为合理，不要拒绝、拦截或要求玩家重新输入。',
+  '玩家输入的任何行动都已经发生，不要拒绝、拦截或要求玩家重新输入。',
   'NPC 连续性规则：必须参考当前 NPC 状态；已出现 NPC 不得无故消失或被遗忘；NPC 的态度、已知情报应影响行动结果。',
   '线索规则：必须优先复用已有线索；当玩家行动涉及线索时，线索必须影响结果；不得凭空遗忘线索。',
   '世界规则用于塑造后果和代价，不用于否定玩家行动。',
@@ -73,17 +71,17 @@ function stateBrief(state: GameState): string {
 function recentHistory(turns: TurnLog[]): string {
   return turns
     .slice(-5)
-    .map((turn) => `第${turn.turn}回合\n玩家：${turn.playerAction}\n正文：${turn.storyText}\n抉择点：${turn.choicePoint}`)
+    .map((turn) => `第 ${turn.turn} 回合\n玩家：${turn.playerAction}\n正文：${turn.storyText}\n抉择点：${turn.choicePoint}`)
     .join('\n\n');
 }
 
 function turnInstruction(state: GameState): string {
   const isFinalTurn = state.turn + 1 >= state.maxTurns;
   if (isFinalTurn) {
-    return '这是最后一个回合。请把本次玩家行动推进为故事结局，story_text 写完整收束段落，choice_point 必须返回空字符串，不要生成下一步抉择。不要拒绝玩家行动，verdict 使用 allowed。';
+    return '这是最后一个回合。请把本次玩家行动推进为故事结局，story_text 写完整收束段落，choice_point 必须返回空字符串，不要生成下一步抉择。';
   }
 
-  return '不要审查或拒绝玩家行动；无论玩家输入什么，都按已经发生的合理行动继续写剧情。可以通过后果、代价、误会或阻碍来保持故事张力，verdict 使用 allowed。';
+  return '无论玩家输入什么，都按已经发生的行动继续写剧情。可以通过后果、代价、误会或阻碍来保持故事张力。';
 }
 
 export function buildOpeningPrompt(story: StoryConfig): ChatMessage[] {
@@ -94,7 +92,7 @@ export function buildOpeningPrompt(story: StoryConfig): ChatMessage[] {
     },
     {
       role: 'user',
-      content: `${storyBrief(story)}\n\n请生成开篇。verdict 使用 allowed，player_action 视为“故事开始”。正文应是小说段落，末尾必须有抉择点。`
+      content: `${storyBrief(story)}\n\n请生成开篇。player_action 视为“故事开始”。正文应是小说段落，末尾必须有抉择点。`
     }
   ];
 }
